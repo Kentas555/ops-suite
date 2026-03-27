@@ -70,6 +70,9 @@ const useAuthStore = create<AuthState>()((set, get) => ({
           profile: mapProfile(data, session.user.email),
           initialized: true,
         });
+
+        // Load all profiles so VisibilityPicker and UserManagement have data immediately
+        get().fetchProfiles();
       } else {
         set({ session, initialized: true });
       }
@@ -117,10 +120,14 @@ const useAuthStore = create<AuthState>()((set, get) => ({
   },
 
   fetchProfiles: async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .order('created_at');
+    if (error) {
+      console.error('[fetchProfiles] Supabase error:', error.message, error.code);
+      return;
+    }
     if (data) {
       set({ profiles: data.map(row => mapProfile(row)) });
     }
