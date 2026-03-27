@@ -1,4 +1,4 @@
-import { Search, Bell, Moon, Sun, Users, CheckSquare, BookOpen, Plus, X, Clock, AlertTriangle, Check } from 'lucide-react';
+import { Search, Bell, Moon, Sun, Users, CheckSquare, BookOpen, Plus, X, Clock, AlertTriangle, Check, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import useStore from '../../stores/useStore';
@@ -9,7 +9,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { formatDate } from '../../utils/helpers';
 import { getText } from '../../utils/bilingual';
 
-export default function Header() {
+export default function Header({ onMobileMenuClick }: { onMobileMenuClick?: () => void }) {
   const { searchQuery, setSearchQuery, clients, tasks, knowledgeEntries, darkMode, toggleDarkMode } = useStore();
   const { t, lang, setLang } = useTranslation();
   const toast = useToastStore();
@@ -93,7 +93,16 @@ export default function Header() {
   };
 
   return (
-    <header className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{ background: 'var(--surface-0)', borderBottom: '1px solid var(--border-default)' }}>
+    <header className="h-16 flex items-center justify-between px-3 md:px-6 flex-shrink-0" style={{ background: 'var(--surface-0)', borderBottom: '1px solid var(--border-default)' }}>
+      {/* Hamburger — mobile only */}
+      <button
+        className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-500 flex-shrink-0 mr-1"
+        onClick={onMobileMenuClick}
+        aria-label="Open menu"
+      >
+        <Menu size={20} />
+      </button>
+
       {/* Search */}
       <div ref={searchRef} className="relative flex-1 max-w-xl">
         <div className="relative">
@@ -151,8 +160,8 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-2 ml-4">
-        {/* Language Switcher */}
-        <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
+        {/* Language Switcher — hidden on mobile */}
+        <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
           <button onClick={() => setLang('en')} className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${lang === 'en' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>EN</button>
           <button onClick={() => setLang('lt')} className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${lang === 'lt' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>LT</button>
         </div>
@@ -279,11 +288,11 @@ export default function Header() {
           )}
         </div>
 
-        {/* User name */}
+        {/* User name — hidden on mobile */}
         {(() => {
           const currentUser = useAuthStore.getState().getCurrentUser();
           return (
-            <span className="text-xs font-medium text-slate-600">{currentUser?.displayName}</span>
+            <span className="hidden sm:inline text-xs font-medium text-slate-600">{currentUser?.displayName}</span>
           );
         })()}
       </div>

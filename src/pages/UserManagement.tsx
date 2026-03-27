@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { User, UserX, UserCheck, Edit2, ShieldCheck, ExternalLink } from 'lucide-react';
+import { User, UserX, UserCheck, Edit2, ShieldCheck, UserPlus } from 'lucide-react';
 import useAuthStore, { type AppProfile } from '../stores/useAuthStore';
 import { useTranslation } from '../i18n/useTranslation';
 import useToastStore from '../stores/useToastStore';
@@ -11,10 +11,17 @@ export default function UserManagement() {
   const currentUserId = useAuthStore(s => s.profile?.id ?? null);
   const fetchProfiles = useAuthStore(s => s.fetchProfiles);
   const updateProfile = useAuthStore(s => s.updateProfile);
+  const createUser = useAuthStore(s => s.createUser);
   const { t } = useTranslation();
   const toast = useToastStore();
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ displayName: '', role: 'user' as 'admin' | 'user' });
+
+  // Create user modal state
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState({ email: '', password: '', displayName: '', role: 'user' as 'admin' | 'user' });
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
 
   useEffect(() => {
     fetchProfiles();
@@ -37,6 +44,28 @@ export default function UserManagement() {
     toast.success(user.isActive ? t.auth.disabledStatus : t.auth.activeStatus);
   };
 
+  const handleCreate = async () => {
+    setCreateError('');
+    if (!createForm.email.trim() || !createForm.password || !createForm.displayName.trim()) {
+      setCreateError('All fields are required.');
+      return;
+    }
+    if (createForm.password.length < 6) {
+      setCreateError('Password must be at least 6 characters.');
+      return;
+    }
+    setCreating(true);
+    const result = await createUser(createForm.email.trim(), createForm.password, createForm.displayName.trim(), createForm.role);
+    setCreating(false);
+    if (!result.success) {
+      setCreateError(result.error ?? 'Failed to create user.');
+      return;
+    }
+    setShowCreate(false);
+    setCreateForm({ email: '', password: '', displayName: '', role: 'user' });
+    toast.success(t.toast.userUpdated);
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -44,19 +73,12 @@ export default function UserManagement() {
           <h1 className="text-2xl font-bold text-slate-900">{t.auth.userManagement}</h1>
           <p className="text-sm text-slate-500 mt-1">{profiles.length} {t.auth.users}</p>
         </div>
-        <a
-          href="https://supabase.com/dashboard"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-secondary text-sm"
+        <button
+          className="btn-primary text-sm"
+          onClick={() => { setShowCreate(true); setCreateError(''); }}
         >
-          <ExternalLink size={14} /> Add users in Supabase
-        </a>
-      </div>
-
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
-        To create or delete users, go to <strong>Supabase Dashboard → Authentication → Users</strong>.
-        Here you can manage display names, roles, and account status.
+          <UserPlus size={14} /> Add User
+        </button>
       </div>
 
       {/* Users List */}
@@ -113,7 +135,7 @@ export default function UserManagement() {
                     </div>
                   ) : (
                     <>
-                      <div className="flex items-center gap-2 mb-0.5">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                         <span className="text-sm font-semibold text-slate-900">{user.displayName}</span>
                         {isCurrentUser && (
                           <span className="text-[10px] px-1.5 py-0.5 bg-primary-50 text-primary-600 rounded-full font-medium">you</span>
@@ -129,7 +151,10 @@ export default function UserManagement() {
                           {user.isActive ? t.auth.activeStatus : t.auth.disabledStatus}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
+                      {user.email && (
+                        <div className="text-xs text-slate-500 mb-1">{user.email}</div>
+                      )}
+                      <div className="flex items-center gap-4 mt-1 text-xs text-slate-400">
                         <span>{t.clients.created}: {formatDate(user.createdAt)}</span>
                         <span>{t.auth.lastLogin}: {user.lastLoginAt ? formatDate(user.lastLoginAt) : t.auth.neverLoggedIn}</span>
                       </div>
@@ -170,14 +195,77 @@ export default function UserManagement() {
 
         {profiles.length === 0 && (
           <div className="text-center py-12 text-slate-400 text-sm">
-            No users found. Create users in the Supabase dashboard.
+            No users found.
           </div>
         )}
       </div>
 
-      {/* Edit modal not needed — inline editing above */}
-      <Modal isOpen={false} onClose={() => {}} title="">
-        <></>
+      {/* Create User Modal */}
+      <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="Add New User">
+        <div className="space-y-4">
+          <div>
+            <label className="label">Display Name</label>
+            <input
+              name="createDisplayName"
+              className="input"
+              placeholder="John Smith"
+              value={createForm.displayName}
+              onChange={(e) => setCreateForm({ ...createForm, displayName: e.target.value })}
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="label">{t.auth.email}</label>
+            <input
+              name="createEmail"
+              type="email"
+              className="input"
+              placeholder="john@company.com"
+              value={createForm.email}
+              onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">{t.auth.password}</label>
+            <input
+              name="createPassword"
+              type="password"
+              className="input"
+              placeholder="Min. 6 characters"
+              value={createForm.password}
+              onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">{t.auth.role}</label>
+            <select
+              name="createRole"
+              className="select"
+              value={createForm.role}
+              onChange={(e) => setCreateForm({ ...createForm, role: e.target.value as 'admin' | 'user' })}
+            >
+              <option value="user">{t.auth.user}</option>
+              <option value="admin">{t.auth.admin}</option>
+            </select>
+          </div>
+
+          {createError && (
+            <div className="p-3 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700">
+              {createError}
+            </div>
+          )}
+
+          <div className="flex gap-2 pt-2">
+            <button
+              className="btn-primary flex-1 justify-center"
+              onClick={handleCreate}
+              disabled={creating}
+            >
+              <UserPlus size={14} /> {creating ? 'Creating...' : 'Create User'}
+            </button>
+            <button className="btn-ghost" onClick={() => setShowCreate(false)}>{t.common.cancel}</button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

@@ -25,6 +25,7 @@ interface AuthState {
 
   fetchProfiles: () => Promise<void>;
   updateProfile: (id: string, updates: Partial<Pick<AppProfile, 'displayName' | 'role' | 'isActive'>>) => Promise<void>;
+  createUser: (email: string, password: string, displayName: string, role: 'admin' | 'user') => Promise<{ success: boolean; error?: string }>;
 }
 
 function mapProfile(row: Record<string, unknown>, email?: string): AppProfile {
@@ -121,6 +122,28 @@ const useAuthStore = create<AuthState>()((set, get) => ({
     if (data) {
       set({ profiles: data.map(row => mapProfile(row)) });
     }
+  },
+
+  createUser: async (email, password, displayName, role) => {
+    const session = get().session;
+    if (!session) return { success: false, error: 'Not authenticated' };
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const res = await fetch(`${supabaseUrl}/functions/v1/create-user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ email, password, displayName, role }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) return { success: false, error: json.error ?? 'Failed to create user' };
+
+    // Refresh the profiles list
+    await get().fetchProfiles();
+    return { success: true };
   },
 
   updateProfile: async (id, updates) => {
