@@ -59,6 +59,7 @@ const en = {
     details: 'Details',
     documents: 'Documents',
     doneCount: 'done',
+    language: 'Language',
   },
 
   // App
@@ -751,6 +752,7 @@ const lt: typeof en = {
     details: 'Detalės',
     documents: 'Dokumentai',
     doneCount: 'atlikta',
+    language: 'Kalba',
   },
 
   app: {
