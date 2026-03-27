@@ -24,11 +24,9 @@ import useReminderStore from './stores/useReminderStore';
 
 // Initializes Supabase auth listener + loads all data on login
 function AppLoader({ children }: { children: React.ReactNode }) {
-  const { initialized, session, initialize } = useAuthStore(s => ({
-    initialized: s.initialized,
-    session: s.session,
-    initialize: s.initialize,
-  }));
+  const initialized = useAuthStore(s => s.initialized);
+  const session = useAuthStore(s => s.session);
+  const initialize = useAuthStore(s => s.initialize);
   const fetchAll = useStore(s => s.fetchAll);
   const fetchReminders = useReminderStore(s => s.fetchReminders);
   const cleanupRef = useRef<(() => void) | null>(null);
