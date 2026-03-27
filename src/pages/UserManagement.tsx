@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { User, UserX, UserCheck, Edit2, ShieldCheck, UserPlus } from 'lucide-react';
+import { User, UserX, UserCheck, Edit2, ShieldCheck, UserPlus, KeyRound } from 'lucide-react';
 import useAuthStore, { type AppProfile } from '../stores/useAuthStore';
 import { useTranslation } from '../i18n/useTranslation';
 import useToastStore from '../stores/useToastStore';
@@ -12,10 +12,31 @@ export default function UserManagement() {
   const fetchProfiles = useAuthStore(s => s.fetchProfiles);
   const updateProfile = useAuthStore(s => s.updateProfile);
   const createUser = useAuthStore(s => s.createUser);
+  const adminResetPassword = useAuthStore(s => s.adminResetPassword);
   const { t } = useTranslation();
   const toast = useToastStore();
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ displayName: '', role: 'user' as 'admin' | 'user' });
+
+  // Reset password modal state
+  const [resetTarget, setResetTarget] = useState<AppProfile | null>(null);
+  const [resetPw, setResetPw] = useState({ newPassword: '', confirmPassword: '' });
+  const [resetError, setResetError] = useState('');
+  const [resetting, setResetting] = useState(false);
+
+  const handleAdminReset = async () => {
+    setResetError('');
+    if (resetPw.newPassword.length < 6) { setResetError('Password must be at least 6 characters.'); return; }
+    if (resetPw.newPassword !== resetPw.confirmPassword) { setResetError('Passwords do not match.'); return; }
+    if (!resetTarget) return;
+    setResetting(true);
+    const result = await adminResetPassword(resetTarget.id, resetPw.newPassword);
+    setResetting(false);
+    if (!result.success) { setResetError(result.error ?? 'Failed to reset password.'); return; }
+    setResetTarget(null);
+    setResetPw({ newPassword: '', confirmPassword: '' });
+    toast.success('Password reset successfully.');
+  };
 
   // Create user modal state
   const [showCreate, setShowCreate] = useState(false);
@@ -168,6 +189,13 @@ export default function UserManagement() {
                     <button className="btn-ghost btn-sm" onClick={() => startEdit(user)} title={t.common.edit}>
                       <Edit2 size={14} />
                     </button>
+                    <button
+                      className="btn-ghost btn-sm text-slate-500"
+                      onClick={() => { setResetTarget(user); setResetPw({ newPassword: '', confirmPassword: '' }); setResetError(''); }}
+                      title="Reset Password"
+                    >
+                      <KeyRound size={14} />
+                    </button>
                     {user.isActive ? (
                       <button
                         className="btn-ghost btn-sm text-amber-600"
@@ -199,6 +227,45 @@ export default function UserManagement() {
           </div>
         )}
       </div>
+
+      {/* Admin Reset Password Modal */}
+      <Modal isOpen={!!resetTarget} onClose={() => setResetTarget(null)} title={`Reset Password — ${resetTarget?.displayName}`} size="sm">
+        <div className="space-y-4">
+          <div>
+            <label className="label">New Password</label>
+            <input
+              name="resetNewPassword"
+              type="password"
+              className="input"
+              placeholder="Min. 6 characters"
+              value={resetPw.newPassword}
+              onChange={(e) => setResetPw({ ...resetPw, newPassword: e.target.value })}
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="label">Confirm Password</label>
+            <input
+              name="resetConfirmPassword"
+              type="password"
+              className="input"
+              placeholder="Repeat new password"
+              value={resetPw.confirmPassword}
+              onChange={(e) => setResetPw({ ...resetPw, confirmPassword: e.target.value })}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAdminReset(); }}
+            />
+          </div>
+          {resetError && (
+            <div className="p-3 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700">{resetError}</div>
+          )}
+          <div className="flex gap-2 pt-1">
+            <button className="btn-primary flex-1 justify-center" onClick={handleAdminReset} disabled={resetting}>
+              {resetting ? 'Saving...' : 'Reset Password'}
+            </button>
+            <button className="btn-ghost" onClick={() => setResetTarget(null)}>Cancel</button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Create User Modal */}
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="Add New User">

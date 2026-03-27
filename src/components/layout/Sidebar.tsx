@@ -1,13 +1,16 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, FileText, UserCog, CheckSquare,
   BookOpen, ClipboardList, Calculator, MessageSquare, Zap, Sparkles, Target,
-  ChevronLeft, ChevronRight, Briefcase, Shield, LogOut, Bug, X,
+  ChevronLeft, ChevronRight, Briefcase, Shield, LogOut, Bug, X, KeyRound,
 } from 'lucide-react';
 import useStore from '../../stores/useStore';
 import useAuthStore from '../../stores/useAuthStore';
 import useErrorStore from '../../stores/useErrorStore';
+import useToastStore from '../../stores/useToastStore';
 import { useTranslation } from '../../i18n/useTranslation';
+import Modal from '../ui/Modal';
 
 type NavItem = { to: string; icon: React.ComponentType<{ size?: number }>; label: string };
 
@@ -46,10 +49,30 @@ function NavItemLink({ item, collapsed }: { item: NavItem; collapsed: boolean })
 function SidebarContent({ collapsed, onMobileClose }: { collapsed: boolean; onMobileClose?: () => void }) {
   const currentUser = useAuthStore(s => s.getCurrentUser());
   const logout = useAuthStore(s => s.logout);
+  const changePassword = useAuthStore(s => s.changePassword);
   const { t } = useTranslation();
   const { toggleSidebar } = useStore();
+  const toast = useToastStore();
   const isAdmin = currentUser?.role === 'admin';
   const errorUnreadCount = useErrorStore(s => s.getUnreadCount());
+
+  const [showChangePw, setShowChangePw] = useState(false);
+  const [pwForm, setPwForm] = useState({ newPassword: '', confirmPassword: '' });
+  const [pwError, setPwError] = useState('');
+  const [pwLoading, setPwLoading] = useState(false);
+
+  const handleChangePassword = async () => {
+    setPwError('');
+    if (pwForm.newPassword.length < 6) { setPwError('Password must be at least 6 characters.'); return; }
+    if (pwForm.newPassword !== pwForm.confirmPassword) { setPwError('Passwords do not match.'); return; }
+    setPwLoading(true);
+    const result = await changePassword(pwForm.newPassword);
+    setPwLoading(false);
+    if (!result.success) { setPwError(result.error ?? 'Failed to change password.'); return; }
+    setShowChangePw(false);
+    setPwForm({ newPassword: '', confirmPassword: '' });
+    toast.success('Password changed successfully.');
+  };
 
   const coreGroup: NavItem[] = [
     { to: '/', icon: LayoutDashboard, label: t.nav.dashboard },
@@ -212,6 +235,15 @@ function SidebarContent({ collapsed, onMobileClose }: { collapsed: boolean; onMo
 
         <div className="p-3 space-y-0.5">
           <button
+            onClick={() => { setPwForm({ newPassword: '', confirmPassword: '' }); setPwError(''); setShowChangePw(true); }}
+            className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-full ${collapsed ? 'justify-center' : ''}`}
+            title={collapsed ? 'Change Password' : undefined}
+          >
+            <KeyRound size={18} />
+            {!collapsed && <span>Change Password</span>}
+          </button>
+
+          <button
             onClick={() => logout()}
             className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-full ${collapsed ? 'justify-center' : ''}`}
             title={collapsed ? t.auth.logout : undefined}
@@ -236,6 +268,44 @@ function SidebarContent({ collapsed, onMobileClose }: { collapsed: boolean; onMo
           )}
         </div>
       </div>
+
+      <Modal isOpen={showChangePw} onClose={() => setShowChangePw(false)} title="Change Password" size="sm">
+        <div className="space-y-4">
+          <div>
+            <label className="label">New Password</label>
+            <input
+              name="newPassword"
+              type="password"
+              className="input"
+              placeholder="Min. 6 characters"
+              value={pwForm.newPassword}
+              onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })}
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="label">Confirm Password</label>
+            <input
+              name="confirmPassword"
+              type="password"
+              className="input"
+              placeholder="Repeat new password"
+              value={pwForm.confirmPassword}
+              onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleChangePassword(); }}
+            />
+          </div>
+          {pwError && (
+            <div className="p-3 bg-danger-50 border border-danger-200 rounded-lg text-sm text-danger-700">{pwError}</div>
+          )}
+          <div className="flex gap-2 pt-1">
+            <button className="btn-primary flex-1 justify-center" onClick={handleChangePassword} disabled={pwLoading}>
+              {pwLoading ? 'Saving...' : 'Save Password'}
+            </button>
+            <button className="btn-ghost" onClick={() => setShowChangePw(false)}>Cancel</button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

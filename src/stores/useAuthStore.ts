@@ -26,6 +26,8 @@ interface AuthState {
   fetchProfiles: () => Promise<void>;
   updateProfile: (id: string, updates: Partial<Pick<AppProfile, 'displayName' | 'role' | 'isActive'>>) => Promise<void>;
   createUser: (email: string, password: string, displayName: string, role: 'admin' | 'user') => Promise<{ success: boolean; error?: string }>;
+  changePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  adminResetPassword: (userId: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 function mapProfile(row: Record<string, unknown>, email?: string): AppProfile {
@@ -142,6 +144,28 @@ const useAuthStore = create<AuthState>()((set, get) => ({
 
     // Refresh the profiles list
     await get().fetchProfiles();
+    return { success: true };
+  },
+
+  changePassword: async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  },
+
+  adminResetPassword: async (userId, newPassword) => {
+    const session = get().session;
+    if (!session) return { success: false, error: 'Not authenticated' };
+    const res = await fetch('/api/reset-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ userId, newPassword }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { success: false, error: json.error ?? 'Failed to reset password' };
     return { success: true };
   },
 
