@@ -14,7 +14,16 @@ export type DocumentType = 'contract' | 'amendment' | 'invoice' | 'registration'
 export type CommunicationType = 'email' | 'phone' | 'meeting' | 'internal_note';
 export type KnowledgeCategory = 'process' | 'terminology' | 'checklist' | 'faq' | 'guideline' | 'template' | 'tip' | 'mistake_to_avoid';
 
-export interface Client {
+// Ownership & visibility
+export type Visibility = 'private' | 'team' | 'selected';
+
+export interface VisibilityFields {
+  ownerId: string;
+  visibility: Visibility;
+  sharedWith: string[]; // user IDs — only used when visibility = 'selected'
+}
+
+export interface Client extends VisibilityFields {
   id: string;
   companyName: string;
   phone: string;
@@ -31,7 +40,7 @@ export interface Client {
   nextAction?: string;
 }
 
-export interface Task {
+export interface Task extends VisibilityFields {
   id: string;
   title: string;
   description: string;
@@ -56,7 +65,7 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
-export interface Contract {
+export interface Contract extends VisibilityFields {
   id: string;
   clientId: string;
   clientName: string;
@@ -84,7 +93,7 @@ export interface Document {
   notes?: string;
 }
 
-export interface AccountWorkflow {
+export interface AccountWorkflow extends VisibilityFields {
   id: string;
   clientId: string;
   clientName: string;
@@ -118,7 +127,7 @@ export interface CommunicationLog {
   contactPerson?: string;
 }
 
-export interface KnowledgeEntry {
+export interface KnowledgeEntry extends VisibilityFields {
   id: string;
   title: BilingualText;
   content: BilingualText;
@@ -129,7 +138,7 @@ export interface KnowledgeEntry {
   updatedAt: string;
 }
 
-export interface SOPChecklist {
+export interface SOPChecklist extends VisibilityFields {
   id: string;
   title: string;
   description: string;
@@ -180,7 +189,7 @@ export interface CommunicationTemplate {
 export type GoalPeriod = 'month' | 'half_year' | 'year';
 export type GoalStatus = 'in_progress' | 'completed' | 'partially_completed' | 'not_completed';
 
-export interface Goal {
+export interface Goal extends VisibilityFields {
   id: string;
   title: string;
   period: GoalPeriod;

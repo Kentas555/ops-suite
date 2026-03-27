@@ -6,7 +6,8 @@ import Modal from '../components/ui/Modal';
 import { useTranslation } from '../i18n/useTranslation';
 import useToastStore from '../stores/useToastStore';
 import { getText } from '../utils/bilingual';
-import type { BilingualText } from '../types';
+import VisibilityPicker from '../components/ui/VisibilityPicker';
+import type { BilingualText, Visibility } from '../types';
 
 export default function Knowledge() {
   const { knowledgeEntries, addKnowledgeEntry, updateKnowledgeEntry, deleteKnowledgeEntry } = useStore();
@@ -25,6 +26,8 @@ export default function Knowledge() {
   const [formTags, setFormTags] = useState('');
   const [formPinned, setFormPinned] = useState(false);
   const [formLang, setFormLang] = useState<'lt' | 'en'>('lt');
+  const [formVisibility, setFormVisibility] = useState<Visibility>('team');
+  const [formSharedWith, setFormSharedWith] = useState<string[]>([]);
 
   const categories = [
     { key: 'all', label: t.knowledge.all, icon: BookOpen },
@@ -61,6 +64,7 @@ export default function Knowledge() {
   const resetForm = () => {
     setFormTitle(''); setFormContent('');
     setFormCategory('process'); setFormTags(''); setFormPinned(false); setFormLang('lt');
+    setFormVisibility('team'); setFormSharedWith([]);
   };
 
   const handleSave = () => {
@@ -73,7 +77,7 @@ export default function Knowledge() {
       updateKnowledgeEntry(editEntry, { title, content, category: formCategory, tags, isPinned: formPinned });
       setEditEntry(null);
     } else {
-      addKnowledgeEntry({ title, content, category: formCategory, tags, isPinned: formPinned });
+      addKnowledgeEntry({ title, content, category: formCategory, tags, isPinned: formPinned, visibility: formVisibility, sharedWith: formSharedWith });
     }
     setShowAdd(false);
     resetForm();
@@ -223,6 +227,7 @@ export default function Knowledge() {
               className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
             <span className="text-sm text-slate-700">{t.knowledge.pinThisEntry}</span>
           </label>
+          {!editEntry && <VisibilityPicker value={{ visibility: formVisibility, sharedWith: formSharedWith }} onChange={(v) => { setFormVisibility(v.visibility); setFormSharedWith(v.sharedWith); }} />}
         </div>
       </Modal>
     </div>

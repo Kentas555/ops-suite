@@ -6,7 +6,8 @@ import useToastStore from '../stores/useToastStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { formatDate } from '../utils/helpers';
 import Modal from '../components/ui/Modal';
-import type { GoalPeriod, GoalStatus } from '../types';
+import VisibilityPicker, { VisibilityBadge } from '../components/ui/VisibilityPicker';
+import type { GoalPeriod, GoalStatus, Visibility } from '../types';
 
 const PERIOD_ORDER: GoalPeriod[] = ['month', 'half_year', 'year'];
 
@@ -26,6 +27,8 @@ export default function Goals() {
     period: 'month' as GoalPeriod,
     status: 'in_progress' as GoalStatus,
     reflection: '',
+    visibility: 'team' as Visibility,
+    sharedWith: [] as string[],
   });
 
   const periodLabel = (p: GoalPeriod): string => {
@@ -83,7 +86,7 @@ export default function Goals() {
   }, [goals, periodFilter, statusFilter]);
 
   const resetForm = () => {
-    setForm({ title: '', period: 'month', status: 'in_progress', reflection: '' });
+    setForm({ title: '', period: 'month', status: 'in_progress', reflection: '', visibility: 'team', sharedWith: [] });
   };
 
   const handleSave = () => {
@@ -99,6 +102,8 @@ export default function Goals() {
         reflection: form.reflection,
         userId: currentUser?.id || '',
         userName: currentUser?.displayName || '',
+        visibility: form.visibility,
+        sharedWith: form.sharedWith,
       });
       toast.success(t.toast.entryCreated);
     }
@@ -108,7 +113,7 @@ export default function Goals() {
   };
 
   const startEdit = (g: typeof goals[0]) => {
-    setForm({ title: g.title, period: g.period, status: g.status, reflection: g.reflection });
+    setForm({ title: g.title, period: g.period, status: g.status, reflection: g.reflection, visibility: 'team', sharedWith: [] });
     setEditId(g.id);
     setShowAdd(true);
   };
@@ -188,8 +193,9 @@ export default function Goals() {
                     <div key={goal.id} className="px-4 py-3 group hover:bg-slate-50 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-medium text-slate-900">{goal.title}</span>
+                            <VisibilityBadge visibility={goal.visibility} sharedWith={goal.sharedWith} />
                             <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${periodStyle(goal.period)}`}>
                               {periodLabel(goal.period)}
                             </span>
@@ -273,6 +279,7 @@ export default function Goals() {
               placeholder={t.goals.reflectionPlaceholder}
             />
           </div>
+          {!editId && <VisibilityPicker value={{ visibility: form.visibility, sharedWith: form.sharedWith }} onChange={(v) => setForm({ ...form, ...v })} />}
         </div>
       </Modal>
     </div>

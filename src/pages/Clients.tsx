@@ -7,6 +7,8 @@ import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
 import { useTranslation } from '../i18n/useTranslation';
 import useToastStore from '../stores/useToastStore';
+import VisibilityPicker from '../components/ui/VisibilityPicker';
+import type { Visibility } from '../types';
 
 export default function Clients() {
   const { clients, addClient } = useStore();
@@ -20,6 +22,7 @@ export default function Clients() {
 
   const [form, setForm] = useState({
     companyName: '', phone: '', responsiblePerson: '', responsiblePersonRole: '', status: 'prospect' as any,
+    visibility: 'team' as Visibility, sharedWith: [] as string[],
   });
 
   const filtered = useMemo(() => {
@@ -54,10 +57,12 @@ export default function Clients() {
       contractStatus: 'draft',
       onboardingStage: 'initial_contact',
       nextFollowUp: undefined,
+      visibility: form.visibility,
+      sharedWith: form.sharedWith,
     });
     setShowAdd(false);
     setSearchParams({});
-    setForm({ companyName: '', phone: '', responsiblePerson: '', responsiblePersonRole: '', status: 'prospect' });
+    setForm({ companyName: '', phone: '', responsiblePerson: '', responsiblePersonRole: '', status: 'prospect', visibility: 'team', sharedWith: [] });
     toast.success(t.toast.clientCreated);
   };
 
@@ -173,6 +178,7 @@ export default function Clients() {
               <option value="active">{t.clients.active}</option>
             </select>
           </div>
+          <VisibilityPicker value={{ visibility: form.visibility, sharedWith: form.sharedWith }} onChange={(v) => setForm({ ...form, ...v })} />
         </div>
       </Modal>
     </div>

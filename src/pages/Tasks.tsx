@@ -8,6 +8,8 @@ import PriorityBadge from '../components/ui/PriorityBadge';
 import Modal from '../components/ui/Modal';
 import { useTranslation } from '../i18n/useTranslation';
 import useToastStore from '../stores/useToastStore';
+import VisibilityPicker, { VisibilityBadge } from '../components/ui/VisibilityPicker';
+import type { Visibility } from '../types';
 
 const PRIORITY_ORDER: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
 
@@ -45,6 +47,7 @@ export default function Tasks() {
     title: '', description: '', priority: 'medium' as any, status: 'todo' as any,
     clientId: '', category: 'follow-up', dueDate: '', dueTime: '', isRecurring: false, recurringInterval: '', notes: '',
     checklistItems: '' as string,
+    visibility: 'team' as Visibility, sharedWith: [] as string[],
   });
 
   const statusColumns = [
@@ -153,10 +156,11 @@ export default function Tasks() {
       category: form.category, dueDate: form.dueDate || undefined, dueTime: form.dueTime || undefined,
       isRecurring: form.isRecurring, recurringInterval: form.recurringInterval || undefined, notes: form.notes,
       checklistItems: form.checklistItems ? form.checklistItems.split('\n').filter(Boolean).map(text => ({ id: generateId(), text: text.trim(), completed: false })) : undefined,
+      visibility: form.visibility, sharedWith: form.sharedWith,
     });
     setShowAdd(false);
     setSearchParams({});
-    setForm({ title: '', description: '', priority: 'medium', status: 'todo', clientId: '', category: 'follow-up', dueDate: '', dueTime: '', isRecurring: false, recurringInterval: '', notes: '', checklistItems: '' });
+    setForm({ title: '', description: '', priority: 'medium', status: 'todo', clientId: '', category: 'follow-up', dueDate: '', dueTime: '', isRecurring: false, recurringInterval: '', notes: '', checklistItems: '', visibility: 'team', sharedWith: [] });
     toast.success(t.toast.taskCreated);
   };
 
@@ -253,7 +257,10 @@ export default function Tasks() {
                         <div className="flex items-start gap-2">
                           <GripVertical size={14} className="text-slate-300 mt-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ opacity: isDragging ? 0 : undefined }} />
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-slate-900 mb-1">{tk.title}</div>
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="text-sm font-medium text-slate-900">{tk.title}</span>
+                              <VisibilityBadge visibility={tk.visibility} sharedWith={tk.sharedWith} />
+                            </div>
                             {tk.clientName && <div className="text-xs text-slate-500 mb-2">{tk.clientName}</div>}
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <PriorityBadge priority={tk.priority} />
@@ -477,6 +484,7 @@ export default function Tasks() {
           </div>
           <div><label className="label">{t.tasks.checklistItems}</label><textarea name="checklistItems" className="textarea" rows={3} value={form.checklistItems} onChange={(e) => setForm({ ...form, checklistItems: e.target.value })} /></div>
           <div><label className="label">{t.common.notes}</label><textarea name="notes" className="textarea" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <VisibilityPicker value={{ visibility: form.visibility, sharedWith: form.sharedWith }} onChange={(v) => setForm({ ...form, ...v })} />
         </div>
       </Modal>
     </div>

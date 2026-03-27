@@ -6,6 +6,8 @@ import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
 import { useTranslation } from '../i18n/useTranslation';
 import useToastStore from '../stores/useToastStore';
+import VisibilityPicker from '../components/ui/VisibilityPicker';
+import type { Visibility } from '../types';
 
 export default function Accounts() {
   const { accountWorkflows, clients, addAccountWorkflow, updateWorkflowStep } = useStore();
@@ -14,7 +16,7 @@ export default function Accounts() {
   const [expanded, setExpanded] = useState<string | null>(accountWorkflows[0]?.id || null);
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ type: 'create' as 'create' | 'update' | 'close', clientId: '', notes: '' });
+  const [form, setForm] = useState({ type: 'create' as 'create' | 'update' | 'close', clientId: '', notes: '', visibility: 'team' as Visibility, sharedWith: [] as string[] });
 
   const defaultSteps = {
     create: [
@@ -65,9 +67,11 @@ export default function Accounts() {
         status: i === 0 ? 'in_progress' : 'pending',
       })),
       notes: form.notes,
+      visibility: form.visibility,
+      sharedWith: form.sharedWith,
     });
     setShowAdd(false);
-    setForm({ type: 'create', clientId: '', notes: '' });
+    setForm({ type: 'create', clientId: '', notes: '', visibility: 'team', sharedWith: [] });
     toast.success(t.toast.workflowCreated);
   };
 
@@ -208,6 +212,7 @@ export default function Accounts() {
             </div>
           </div>
           <div><label className="label">{t.common.notes}</label><textarea name="notes" className="textarea" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <VisibilityPicker value={{ visibility: form.visibility, sharedWith: form.sharedWith }} onChange={(v) => setForm({ ...form, ...v })} />
         </div>
       </Modal>
     </div>

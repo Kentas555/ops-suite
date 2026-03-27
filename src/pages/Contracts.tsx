@@ -7,6 +7,8 @@ import StatusBadge from '../components/ui/StatusBadge';
 import Modal from '../components/ui/Modal';
 import { useTranslation } from '../i18n/useTranslation';
 import useToastStore from '../stores/useToastStore';
+import VisibilityPicker from '../components/ui/VisibilityPicker';
+import type { Visibility } from '../types';
 
 export default function Contracts() {
   const { contracts, clients, addContract, updateContract } = useStore();
@@ -21,6 +23,7 @@ export default function Contracts() {
   const [form, setForm] = useState({
     clientId: '', contractNumber: '', type: 'Service Agreement', status: 'draft' as any,
     startDate: '', endDate: '', value: '', currency: 'EUR', notes: '', missingItems: '',
+    visibility: 'team' as Visibility, sharedWith: [] as string[],
   });
 
   const filtered = useMemo(() => contracts.filter(c => {
@@ -48,10 +51,11 @@ export default function Contracts() {
       documents: [],
       notes: form.notes,
       missingItems: form.missingItems.split('\n').map(i => i.trim()).filter(Boolean),
+      visibility: form.visibility, sharedWith: form.sharedWith,
     });
     setShowAdd(false);
     setSearchParams({});
-    setForm({ clientId: '', contractNumber: '', type: 'Service Agreement', status: 'draft', startDate: '', endDate: '', value: '', currency: 'EUR', notes: '', missingItems: '' });
+    setForm({ clientId: '', contractNumber: '', type: 'Service Agreement', status: 'draft', startDate: '', endDate: '', value: '', currency: 'EUR', notes: '', missingItems: '', visibility: 'team', sharedWith: [] });
     toast.success(t.toast.contractCreated);
   };
 
@@ -197,6 +201,7 @@ export default function Contracts() {
           </div>
           <div><label className="label">{t.common.notes}</label><textarea name="notes" className="textarea" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           <div><label className="label">{t.contracts.missingItemsPerLine}</label><textarea name="missingItems" className="textarea" rows={3} placeholder="" value={form.missingItems} onChange={(e) => setForm({ ...form, missingItems: e.target.value })} /></div>
+          <VisibilityPicker value={{ visibility: form.visibility, sharedWith: form.sharedWith }} onChange={(v) => setForm({ ...form, ...v })} />
         </div>
       </Modal>
     </div>

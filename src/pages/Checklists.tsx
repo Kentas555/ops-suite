@@ -5,6 +5,8 @@ import { generateId } from '../utils/helpers';
 import Modal from '../components/ui/Modal';
 import { useTranslation } from '../i18n/useTranslation';
 import useToastStore from '../stores/useToastStore';
+import VisibilityPicker from '../components/ui/VisibilityPicker';
+import type { Visibility } from '../types';
 
 export default function Checklists() {
   const { sopChecklists, addSOPChecklist, activeChecklistProgress, toggleChecklistProgress, resetChecklistProgress } = useStore();
@@ -21,6 +23,7 @@ export default function Checklists() {
   const [form, setForm] = useState({
     title: '', description: '', category: 'Onboarding', estimatedTime: '',
     items: [{ text: '', helpText: '', isRequired: true }] as { text: string; helpText: string; isRequired: boolean }[],
+    visibility: 'team' as Visibility, sharedWith: [] as string[],
   });
 
   const filtered = useMemo(() => sopChecklists.filter(c => {
@@ -43,9 +46,10 @@ export default function Checklists() {
         isRequired: item.isRequired, order: i + 1,
       })),
       lastUsed: undefined, usageCount: 0,
+      visibility: form.visibility, sharedWith: form.sharedWith,
     });
     setShowAdd(false);
-    setForm({ title: '', description: '', category: 'Onboarding', estimatedTime: '', items: [{ text: '', helpText: '', isRequired: true }] });
+    setForm({ title: '', description: '', category: 'Onboarding', estimatedTime: '', items: [{ text: '', helpText: '', isRequired: true }], visibility: 'team', sharedWith: [] });
     toast.success(t.toast.checklistCreated);
   };
 
@@ -247,6 +251,7 @@ export default function Checklists() {
               <Plus size={14} /> {t.checklists.addStep}
             </button>
           </div>
+          <VisibilityPicker value={{ visibility: form.visibility, sharedWith: form.sharedWith }} onChange={(v) => setForm({ ...form, ...v })} />
         </div>
       </Modal>
     </div>

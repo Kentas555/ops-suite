@@ -274,7 +274,7 @@ export default function ClientDetail() {
             <><button className="btn-secondary" onClick={() => setShowAddTask(false)}>{t.common.cancel}</button>
             <button className="btn-primary" onClick={() => {
               if (taskForm.title) {
-                addTask({ ...taskForm, clientId: client.id, clientName: client.companyName, status: 'todo', isRecurring: false, notes: '' });
+                addTask({ ...taskForm, clientId: client.id, clientName: client.companyName, status: 'todo', isRecurring: false, notes: '', visibility: 'team', sharedWith: [] });
                 setShowAddTask(false);
                 setTaskForm({ title: '', description: '', priority: 'medium', dueDate: '', category: 'follow-up' });
                 toast.success(t.toast.taskCreated);

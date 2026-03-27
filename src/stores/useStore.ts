@@ -10,8 +10,30 @@ import type { Language } from '../i18n/translations';
 
 // ─── Mappers: DB row (snake_case) → TypeScript (camelCase) ───────
 
+function mapVisibility(r: Record<string, unknown>) {
+  return {
+    ownerId: (r.owner_id as string) || '',
+    visibility: ((r.visibility as string) || 'team') as import('../types').Visibility,
+    sharedWith: (r.shared_with as string[]) || [],
+  };
+}
+
+function visibilityToDb(v: { ownerId?: string; visibility?: string; sharedWith?: string[] }) {
+  const d: Record<string, unknown> = {};
+  if (v.ownerId !== undefined) d.owner_id = v.ownerId;
+  if (v.visibility !== undefined) d.visibility = v.visibility;
+  if (v.sharedWith !== undefined) d.shared_with = v.sharedWith;
+  return d;
+}
+
+async function getOwnerId() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? '';
+}
+
 function mapClient(r: Record<string, unknown>): Client {
   return {
+    ...mapVisibility(r),
     id: r.id as string,
     companyName: (r.company_name as string) || '',
     phone: (r.phone as string) || '',
@@ -30,7 +52,7 @@ function mapClient(r: Record<string, unknown>): Client {
 }
 
 function clientToDb(c: Partial<Client>): Record<string, unknown> {
-  const d: Record<string, unknown> = {};
+  const d: Record<string, unknown> = { ...visibilityToDb(c) };
   if (c.id !== undefined) d.id = c.id;
   if (c.companyName !== undefined) d.company_name = c.companyName;
   if (c.phone !== undefined) d.phone = c.phone;
@@ -49,6 +71,7 @@ function clientToDb(c: Partial<Client>): Record<string, unknown> {
 
 function mapTask(r: Record<string, unknown>): Task {
   return {
+    ...mapVisibility(r),
     id: r.id as string,
     title: (r.title as string) || '',
     description: (r.description as string) || '',
@@ -69,7 +92,7 @@ function mapTask(r: Record<string, unknown>): Task {
 }
 
 function taskToDb(t: Partial<Task>): Record<string, unknown> {
-  const d: Record<string, unknown> = {};
+  const d: Record<string, unknown> = { ...visibilityToDb(t) };
   if (t.id !== undefined) d.id = t.id;
   if (t.title !== undefined) d.title = t.title;
   if (t.description !== undefined) d.description = t.description;
@@ -90,6 +113,7 @@ function taskToDb(t: Partial<Task>): Record<string, unknown> {
 
 function mapContract(r: Record<string, unknown>): Contract {
   return {
+    ...mapVisibility(r),
     id: r.id as string,
     clientId: r.client_id as string,
     clientName: (r.client_name as string) || '',
@@ -109,7 +133,7 @@ function mapContract(r: Record<string, unknown>): Contract {
 }
 
 function contractToDb(c: Partial<Contract>): Record<string, unknown> {
-  const d: Record<string, unknown> = {};
+  const d: Record<string, unknown> = { ...visibilityToDb(c) };
   if (c.id !== undefined) d.id = c.id;
   if (c.clientId !== undefined) d.client_id = c.clientId;
   if (c.clientName !== undefined) d.client_name = c.clientName;
@@ -129,6 +153,7 @@ function contractToDb(c: Partial<Contract>): Record<string, unknown> {
 
 function mapWorkflow(r: Record<string, unknown>): AccountWorkflow {
   return {
+    ...mapVisibility(r),
     id: r.id as string,
     clientId: r.client_id as string,
     clientName: (r.client_name as string) || '',
@@ -142,7 +167,7 @@ function mapWorkflow(r: Record<string, unknown>): AccountWorkflow {
 }
 
 function workflowToDb(w: Partial<AccountWorkflow>): Record<string, unknown> {
-  const d: Record<string, unknown> = {};
+  const d: Record<string, unknown> = { ...visibilityToDb(w) };
   if (w.id !== undefined) d.id = w.id;
   if (w.clientId !== undefined) d.client_id = w.clientId;
   if (w.clientName !== undefined) d.client_name = w.clientName;
@@ -183,6 +208,7 @@ function commLogToDb(l: Partial<CommunicationLog>): Record<string, unknown> {
 
 function mapKnowledge(r: Record<string, unknown>): KnowledgeEntry {
   return {
+    ...mapVisibility(r),
     id: r.id as string,
     title: r.title as KnowledgeEntry['title'],
     content: r.content as KnowledgeEntry['content'],
@@ -195,7 +221,7 @@ function mapKnowledge(r: Record<string, unknown>): KnowledgeEntry {
 }
 
 function knowledgeToDb(e: Partial<KnowledgeEntry>): Record<string, unknown> {
-  const d: Record<string, unknown> = {};
+  const d: Record<string, unknown> = { ...visibilityToDb(e) };
   if (e.id !== undefined) d.id = e.id;
   if (e.title !== undefined) d.title = e.title;
   if (e.content !== undefined) d.content = e.content;
@@ -208,6 +234,7 @@ function knowledgeToDb(e: Partial<KnowledgeEntry>): Record<string, unknown> {
 
 function mapSOP(r: Record<string, unknown>): SOPChecklist {
   return {
+    ...mapVisibility(r),
     id: r.id as string,
     title: (r.title as string) || '',
     description: (r.description as string) || '',
@@ -220,7 +247,7 @@ function mapSOP(r: Record<string, unknown>): SOPChecklist {
 }
 
 function sopToDb(c: Partial<SOPChecklist>): Record<string, unknown> {
-  const d: Record<string, unknown> = {};
+  const d: Record<string, unknown> = { ...visibilityToDb(c) };
   if (c.id !== undefined) d.id = c.id;
   if (c.title !== undefined) d.title = c.title;
   if (c.description !== undefined) d.description = c.description;
@@ -287,6 +314,7 @@ function quickReplyToDb(r: Partial<QuickReply>): Record<string, unknown> {
 
 function mapGoal(r: Record<string, unknown>): Goal {
   return {
+    ...mapVisibility(r),
     id: r.id as string,
     title: (r.title as string) || '',
     period: r.period as Goal['period'],
@@ -300,7 +328,7 @@ function mapGoal(r: Record<string, unknown>): Goal {
 }
 
 function goalToDb(g: Partial<Goal>): Record<string, unknown> {
-  const d: Record<string, unknown> = {};
+  const d: Record<string, unknown> = { ...visibilityToDb(g) };
   if (g.id !== undefined) d.id = g.id;
   if (g.title !== undefined) d.title = g.title;
   if (g.period !== undefined) d.period = g.period;
@@ -335,23 +363,23 @@ interface AppState {
   fetchAll: () => Promise<void>;
 
   // Clients
-  addClient: (client: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addClient: (client: Omit<Client, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>) => Promise<void>;
   updateClient: (id: string, updates: Partial<Client>) => Promise<void>;
   deleteClient: (id: string) => Promise<void>;
 
   // Tasks
-  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'ownerId'>) => Promise<void>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   toggleTaskChecklistItem: (taskId: string, itemId: string) => Promise<void>;
 
   // Contracts
-  addContract: (contract: Omit<Contract, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addContract: (contract: Omit<Contract, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>) => Promise<void>;
   updateContract: (id: string, updates: Partial<Contract>) => Promise<void>;
   deleteContract: (id: string) => Promise<void>;
 
   // Account Workflows
-  addAccountWorkflow: (workflow: Omit<AccountWorkflow, 'id' | 'createdAt'>) => Promise<void>;
+  addAccountWorkflow: (workflow: Omit<AccountWorkflow, 'id' | 'createdAt' | 'ownerId'>) => Promise<void>;
   updateAccountWorkflow: (id: string, updates: Partial<AccountWorkflow>) => Promise<void>;
   updateWorkflowStep: (workflowId: string, stepId: string, updates: Partial<WorkflowStep>) => Promise<void>;
 
@@ -360,12 +388,12 @@ interface AppState {
   addInteraction: (clientId: string, log: Omit<CommunicationLog, 'id' | 'createdAt'>) => Promise<void>;
 
   // Knowledge
-  addKnowledgeEntry: (entry: Omit<KnowledgeEntry, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addKnowledgeEntry: (entry: Omit<KnowledgeEntry, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>) => Promise<void>;
   updateKnowledgeEntry: (id: string, updates: Partial<KnowledgeEntry>) => Promise<void>;
   deleteKnowledgeEntry: (id: string) => Promise<void>;
 
   // SOP Checklists
-  addSOPChecklist: (checklist: Omit<SOPChecklist, 'id'>) => Promise<void>;
+  addSOPChecklist: (checklist: Omit<SOPChecklist, 'id' | 'ownerId'>) => Promise<void>;
   updateSOPChecklist: (id: string, updates: Partial<SOPChecklist>) => Promise<void>;
 
   // Quick Notes
@@ -385,7 +413,7 @@ interface AppState {
   incrementQuickReplyUsage: (id: string) => Promise<void>;
 
   // Goals
-  addGoal: (goal: Omit<Goal, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addGoal: (goal: Omit<Goal, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>) => Promise<void>;
   updateGoal: (id: string, updates: Partial<Goal>) => Promise<void>;
   deleteGoal: (id: string) => Promise<void>;
 
@@ -470,7 +498,8 @@ const useStore = create<AppState>()(
       addClient: async (clientData) => {
         const id = uuid();
         const n = now();
-        const newClient: Client = { ...clientData, id, createdAt: n, updatedAt: n };
+        const ownerId = await getOwnerId();
+        const newClient: Client = { ...clientData, id, createdAt: n, updatedAt: n, ownerId };
         set(s => ({ clients: [...s.clients, newClient] }));
         await supabase.from('clients').insert(clientToDb(newClient));
       },
@@ -487,7 +516,8 @@ const useStore = create<AppState>()(
       // ── Tasks ──
       addTask: async (taskData) => {
         const id = uuid();
-        const newTask: Task = { ...taskData, id, createdAt: now() };
+        const ownerId = await getOwnerId();
+        const newTask: Task = { ...taskData, id, createdAt: now(), ownerId };
         set(s => ({ tasks: [...s.tasks, newTask] }));
         await supabase.from('tasks').insert(taskToDb(newTask));
       },
@@ -515,7 +545,8 @@ const useStore = create<AppState>()(
       addContract: async (contractData) => {
         const id = uuid();
         const n = now();
-        const newContract: Contract = { ...contractData, id, createdAt: n, updatedAt: n };
+        const ownerId = await getOwnerId();
+        const newContract: Contract = { ...contractData, id, createdAt: n, updatedAt: n, ownerId };
         set(s => ({ contracts: [...s.contracts, newContract] }));
         await supabase.from('contracts').insert(contractToDb(newContract));
       },
@@ -532,7 +563,8 @@ const useStore = create<AppState>()(
       // ── Account Workflows ──
       addAccountWorkflow: async (workflowData) => {
         const id = uuid();
-        const newWorkflow: AccountWorkflow = { ...workflowData, id, createdAt: now() };
+        const ownerId = await getOwnerId();
+        const newWorkflow: AccountWorkflow = { ...workflowData, id, createdAt: now(), ownerId };
         set(s => ({ accountWorkflows: [...s.accountWorkflows, newWorkflow] }));
         await supabase.from('account_workflows').insert(workflowToDb(newWorkflow));
       },
@@ -583,7 +615,8 @@ const useStore = create<AppState>()(
       addKnowledgeEntry: async (entryData) => {
         const id = uuid();
         const n = now();
-        const newEntry: KnowledgeEntry = { ...entryData, id, createdAt: n, updatedAt: n };
+        const ownerId = await getOwnerId();
+        const newEntry: KnowledgeEntry = { ...entryData, id, createdAt: n, updatedAt: n, ownerId };
         set(s => ({ knowledgeEntries: [...s.knowledgeEntries, newEntry] }));
         await supabase.from('knowledge_entries').insert(knowledgeToDb(newEntry));
       },
@@ -602,7 +635,8 @@ const useStore = create<AppState>()(
       // ── SOP Checklists ──
       addSOPChecklist: async (checklistData) => {
         const id = uuid();
-        const newChecklist: SOPChecklist = { ...checklistData, id };
+        const ownerId = await getOwnerId();
+        const newChecklist: SOPChecklist = { ...checklistData, id, ownerId };
         set(s => ({ sopChecklists: [...s.sopChecklists, newChecklist] }));
         await supabase.from('sop_checklists').insert(sopToDb(newChecklist));
       },
@@ -683,7 +717,8 @@ const useStore = create<AppState>()(
       addGoal: async (goalData) => {
         const id = uuid();
         const n = now();
-        const newGoal: Goal = { ...goalData, id, createdAt: n, updatedAt: n };
+        const ownerId = await getOwnerId();
+        const newGoal: Goal = { ...goalData, id, createdAt: n, updatedAt: n, ownerId };
         set(s => ({ goals: [...s.goals, newGoal] }));
         await supabase.from('goals').insert(goalToDb(newGoal));
       },
