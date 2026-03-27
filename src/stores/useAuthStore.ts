@@ -128,8 +128,7 @@ const useAuthStore = create<AuthState>()((set, get) => ({
     const session = get().session;
     if (!session) return { success: false, error: 'Not authenticated' };
 
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-    const res = await fetch(`${supabaseUrl}/functions/v1/create-user`, {
+    const res = await fetch('/api/create-user', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
