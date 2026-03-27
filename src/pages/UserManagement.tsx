@@ -7,12 +7,10 @@ import { formatDate } from '../utils/helpers';
 import Modal from '../components/ui/Modal';
 
 export default function UserManagement() {
-  const { profiles, currentUserId, fetchProfiles, updateProfile } = useAuthStore(s => ({
-    profiles: s.profiles,
-    currentUserId: s.profile?.id ?? null,
-    fetchProfiles: s.fetchProfiles,
-    updateProfile: s.updateProfile,
-  }));
+  const profiles = useAuthStore(s => s.profiles);
+  const currentUserId = useAuthStore(s => s.profile?.id ?? null);
+  const fetchProfiles = useAuthStore(s => s.fetchProfiles);
+  const updateProfile = useAuthStore(s => s.updateProfile);
   const { t } = useTranslation();
   const toast = useToastStore();
   const [editingUser, setEditingUser] = useState<string | null>(null);
