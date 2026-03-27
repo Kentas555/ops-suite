@@ -123,6 +123,7 @@ export default function AIReply() {
               )}
             </div>
             <textarea
+              name="clientMessage"
               className="textarea"
               rows={7}
               value={clientMessage}
@@ -137,6 +138,7 @@ export default function AIReply() {
             <div>
               <label className="label mb-2">{t.aiReply.toneLabel}</label>
               <select
+                name="tone"
                 className="select"
                 value={tone}
                 onChange={(e) => setTone(e.target.value as AITone)}
@@ -274,6 +276,7 @@ export default function AIReply() {
 
                 {editMode ? (
                   <textarea
+                    name="generatedReply"
                     className="textarea flex-1"
                     rows={12}
                     value={generatedReply}

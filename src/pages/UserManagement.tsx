@@ -89,6 +89,7 @@ export default function UserManagement() {
                         <div>
                           <label className="label">{t.auth.displayName}</label>
                           <input
+                            name="displayName"
                             className="input"
                             value={editForm.displayName}
                             onChange={(e) => setEditForm({ ...editForm, displayName: e.target.value })}
@@ -97,6 +98,7 @@ export default function UserManagement() {
                         <div>
                           <label className="label">{t.auth.role}</label>
                           <select
+                            name="role"
                             className="select"
                             value={editForm.role}
                             onChange={(e) => setEditForm({ ...editForm, role: e.target.value as 'admin' | 'user' })}

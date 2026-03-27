@@ -130,9 +130,9 @@ export default function QuickReplies() {
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <div className="relative flex-1 max-w-sm">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input className="input pl-9" placeholder={t.replies.searchReplies} value={search} onChange={(e) => setSearch(e.target.value)} />
+          <input name="search" className="input pl-9" placeholder={t.replies.searchReplies} value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select className="select w-40" value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
+        <select name="sortBy" className="select w-40" value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
           <option value="most_used">{t.replies.sortMostUsed}</option>
           <option value="newest">{t.replies.sortNewest}</option>
           <option value="alpha">{t.replies.sortAlpha}</option>
@@ -236,19 +236,19 @@ export default function QuickReplies() {
 
           <div>
             <label className="label">{t.common.title} * <span className="text-slate-400 font-normal uppercase text-[10px]">({formLang})</span></label>
-            <input className="input" value={currentForm.title} onChange={(e) => setCurrentForm({ ...currentForm, title: e.target.value })} autoFocus />
+            <input name="title" className="input" value={currentForm.title} onChange={(e) => setCurrentForm({ ...currentForm, title: e.target.value })} autoFocus />
           </div>
 
           <div>
             <label className="label">{t.common.category}</label>
-            <select className="select" value={formCategory} onChange={(e) => setFormCategory(e.target.value as QuickReplyCategory)}>
+            <select name="category" className="select" value={formCategory} onChange={(e) => setFormCategory(e.target.value as QuickReplyCategory)}>
               {categoryKeys.filter(c => c !== 'all').map(cat => (<option key={cat} value={cat}>{categoryLabel(cat)}</option>))}
             </select>
           </div>
 
           <div>
             <label className="label">{t.replies.messageContent} * <span className="text-slate-400 font-normal uppercase text-[10px]">({formLang})</span></label>
-            <textarea className="textarea" rows={7} value={currentForm.message} onChange={(e) => setCurrentForm({ ...currentForm, message: e.target.value })} placeholder={t.replies.messagePlaceholder} />
+            <textarea name="message" className="textarea" rows={7} value={currentForm.message} onChange={(e) => setCurrentForm({ ...currentForm, message: e.target.value })} placeholder={t.replies.messagePlaceholder} />
           </div>
 
           {/* Show other language version if it exists */}

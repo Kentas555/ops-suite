@@ -72,9 +72,9 @@ export default function Clients() {
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <div className="relative flex-1 max-w-sm">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input className="input pl-9" placeholder={t.clients.searchClients} value={search} onChange={(e) => setSearch(e.target.value)} />
+          <input name="search" className="input pl-9" placeholder={t.clients.searchClients} value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select className="select w-40" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <select name="statusFilter" className="select w-40" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">{t.clients.allStatuses}</option>
           <option value="active">{t.clients.active}</option>
           <option value="onboarding">{t.clients.onboarding}</option>
@@ -84,7 +84,7 @@ export default function Clients() {
           <option value="issue">{t.clients.issue}</option>
           <option value="churned">{t.clients.churned}</option>
         </select>
-        <select className="select w-40" value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
+        <select name="sortBy" className="select w-40" value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
           <option value="recent">{t.crm.recentFirst}</option>
           <option value="inactive">{t.crm.oldestFirst}</option>
           <option value="name">A → Z</option>
@@ -149,25 +149,25 @@ export default function Clients() {
         <div className="space-y-4">
           <div>
             <label className="label">{t.clients.companyName} *</label>
-            <input className="input" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} autoFocus />
+            <input name="companyName" className="input" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} autoFocus />
           </div>
           <div>
             <label className="label">{t.clients.phone} *</label>
-            <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+370..." />
+            <input name="phone" className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+370..." />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">{t.clients.responsiblePerson} *</label>
-              <input className="input" value={form.responsiblePerson} onChange={(e) => setForm({ ...form, responsiblePerson: e.target.value })} />
+              <input name="responsiblePerson" className="input" value={form.responsiblePerson} onChange={(e) => setForm({ ...form, responsiblePerson: e.target.value })} />
             </div>
             <div>
               <label className="label">{t.clients.responsiblePersonRole}</label>
-              <input className="input" value={form.responsiblePersonRole} onChange={(e) => setForm({ ...form, responsiblePersonRole: e.target.value })} />
+              <input name="responsiblePersonRole" className="input" value={form.responsiblePersonRole} onChange={(e) => setForm({ ...form, responsiblePersonRole: e.target.value })} />
             </div>
           </div>
           <div>
             <label className="label">{t.common.status}</label>
-            <select className="select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+            <select name="status" className="select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
               <option value="prospect">{t.clients.prospect}</option>
               <option value="onboarding">{t.clients.onboarding}</option>
               <option value="active">{t.clients.active}</option>

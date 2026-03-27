@@ -66,9 +66,9 @@ export default function Contracts() {
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1 max-w-xs">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input className="input pl-9" placeholder={t.contracts.searchContracts} value={search} onChange={(e) => setSearch(e.target.value)} />
+          <input name="search" className="input pl-9" placeholder={t.contracts.searchContracts} value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select className="select w-44" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <select name="statusFilter" className="select w-44" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">{t.contracts.allStatuses}</option>
           <option value="draft">{t.contracts.draft}</option>
           <option value="in_progress">{t.contracts.inProgress}</option>
@@ -124,7 +124,7 @@ export default function Contracts() {
                             <div><span className="text-slate-500">{t.common.notes}:</span> {contract.notes || '—'}</div>
                           </div>
                           <div className="mt-3 flex gap-2">
-                            <select className="select text-xs w-36" value={contract.status}
+                            <select name="status" className="select text-xs w-36" value={contract.status}
                               onChange={(e) => { updateContract(contract.id, { status: e.target.value as any }); toast.success(t.toast.contractUpdated); }}
                               onClick={(e) => e.stopPropagation()}>
                               <option value="draft">{t.contracts.draft}</option>
@@ -175,28 +175,28 @@ export default function Contracts() {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div><label className="label">{t.common.client} *</label>
-              <select className="select" value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
+              <select name="clientId" className="select" value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
                 <option value="">{t.contracts.selectClient}</option>
                 {clients.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
               </select>
             </div>
-            <div><label className="label">{t.contracts.contractNum} *</label><input className="input" value={form.contractNumber} onChange={(e) => setForm({ ...form, contractNumber: e.target.value })} placeholder="SVC-2024-XXX" /></div>
+            <div><label className="label">{t.contracts.contractNum} *</label><input name="contractNumber" className="input" value={form.contractNumber} onChange={(e) => setForm({ ...form, contractNumber: e.target.value })} placeholder="SVC-2024-XXX" /></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">{t.common.type}</label><input className="input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} /></div>
+            <div><label className="label">{t.common.type}</label><input name="type" className="input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} /></div>
             <div><label className="label">{t.common.status}</label>
-              <select className="select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+              <select name="status" className="select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                 <option value="draft">{t.contracts.draft}</option><option value="in_progress">{t.contracts.inProgress}</option><option value="waiting_info">{t.contracts.waitingInfo}</option><option value="review">{t.contracts.underReview}</option><option value="signed">{t.contracts.signed}</option>
               </select>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
-            <div><label className="label">{t.contracts.startDate}</label><input className="input" type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
-            <div><label className="label">{t.contracts.endDate}</label><input className="input" type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
-            <div><label className="label">{t.contracts.valueEur}</label><input className="input" type="number" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} /></div>
+            <div><label className="label">{t.contracts.startDate}</label><input name="startDate" className="input" type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
+            <div><label className="label">{t.contracts.endDate}</label><input name="endDate" className="input" type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
+            <div><label className="label">{t.contracts.valueEur}</label><input name="value" className="input" type="number" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} /></div>
           </div>
-          <div><label className="label">{t.common.notes}</label><textarea className="textarea" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-          <div><label className="label">{t.contracts.missingItemsPerLine}</label><textarea className="textarea" rows={3} placeholder="" value={form.missingItems} onChange={(e) => setForm({ ...form, missingItems: e.target.value })} /></div>
+          <div><label className="label">{t.common.notes}</label><textarea name="notes" className="textarea" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <div><label className="label">{t.contracts.missingItemsPerLine}</label><textarea name="missingItems" className="textarea" rows={3} placeholder="" value={form.missingItems} onChange={(e) => setForm({ ...form, missingItems: e.target.value })} /></div>
         </div>
       </Modal>
     </div>

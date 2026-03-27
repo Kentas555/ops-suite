@@ -186,12 +186,12 @@ export default function Accounts() {
       >
         <div className="space-y-4">
           <div><label className="label">{t.accounts.workflowType}</label>
-            <select className="select" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as any })}>
+            <select name="type" className="select" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as any })}>
               <option value="create">{t.accounts.createAccount}</option><option value="update">{t.accounts.updateAccount}</option><option value="close">{t.accounts.closeAccount}</option>
             </select>
           </div>
           <div><label className="label">{t.common.client} *</label>
-            <select className="select" value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
+            <select name="clientId" className="select" value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
               <option value="">{t.common.select}</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
             </select>
@@ -207,7 +207,7 @@ export default function Accounts() {
               ))}
             </div>
           </div>
-          <div><label className="label">{t.common.notes}</label><textarea className="textarea" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <div><label className="label">{t.common.notes}</label><textarea name="notes" className="textarea" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
         </div>
       </Modal>
     </div>

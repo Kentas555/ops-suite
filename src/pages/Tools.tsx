@@ -38,12 +38,12 @@ function DiscountCalculator() {
     <div className="card p-5 lg:col-span-2">
       <h2 className="text-sm font-semibold text-slate-900 mb-4">{t.tools.discountCalculator}</h2>
       <div className="grid grid-cols-4 gap-3 mb-4">
-        <div><label className="label">{t.tools.basePrice}</label><input className="input" type="number" value={basePrice} onChange={(e) => setBasePrice(e.target.value)} /></div>
-        <div><label className="label">{t.tools.customDiscount}</label><input className="input" type="number" value={customDiscount} onChange={(e) => setCustomDiscount(e.target.value)} /></div>
-        <div><label className="label">{t.tools.vatRate}</label><input className="input" type="number" value={vatRate} onChange={(e) => setVatRate(e.target.value)} /></div>
+        <div><label className="label">{t.tools.basePrice}</label><input name="basePrice" className="input" type="number" value={basePrice} onChange={(e) => setBasePrice(e.target.value)} /></div>
+        <div><label className="label">{t.tools.customDiscount}</label><input name="customDiscount" className="input" type="number" value={customDiscount} onChange={(e) => setCustomDiscount(e.target.value)} /></div>
+        <div><label className="label">{t.tools.vatRate}</label><input name="vatRate" className="input" type="number" value={vatRate} onChange={(e) => setVatRate(e.target.value)} /></div>
         <div className="flex items-end pb-2">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={includeVat} onChange={(e) => setIncludeVat(e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-primary-600" />
+            <input name="includeVat" type="checkbox" checked={includeVat} onChange={(e) => setIncludeVat(e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-primary-600" />
             <span className="text-sm text-slate-700">{t.tools.showWithVat}</span>
           </label>
         </div>
@@ -102,8 +102,8 @@ function VATCalculator() {
           <button onClick={() => setMode('add')} className={`flex-1 py-1.5 text-xs font-medium rounded-lg ${mode === 'add' ? 'bg-primary-100 text-primary-700' : 'bg-slate-100 text-slate-600'}`}>{t.tools.addVat}</button>
           <button onClick={() => setMode('remove')} className={`flex-1 py-1.5 text-xs font-medium rounded-lg ${mode === 'remove' ? 'bg-primary-100 text-primary-700' : 'bg-slate-100 text-slate-600'}`}>{t.tools.removeVat}</button>
         </div>
-        <div><label className="label">{t.tools.amount}</label><input className="input" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
-        <div><label className="label">{t.tools.vatRate}</label><input className="input" type="number" value={vatRate} onChange={(e) => setVatRate(e.target.value)} /></div>
+        <div><label className="label">{t.tools.amount}</label><input name="amount" className="input" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
+        <div><label className="label">{t.tools.vatRate}</label><input name="vatRate" className="input" type="number" value={vatRate} onChange={(e) => setVatRate(e.target.value)} /></div>
         <div className="bg-slate-50 rounded-lg p-3 space-y-2 text-sm">
           <div className="flex justify-between"><span className="text-slate-500">{t.tools.netAmount}</span><span className="font-semibold text-slate-900">{fmtCur(net)}</span></div>
           <div className="flex justify-between"><span className="text-slate-500">{t.tools.vat} ({rate}%)</span><span className="font-semibold text-amber-600">{fmtCur(vatAmt)}</span></div>
@@ -136,8 +136,8 @@ function PercentageCalculator() {
         <button onClick={() => setMode('change')} className={`flex-1 py-1.5 text-xs font-medium rounded-lg ${mode === 'change' ? 'bg-primary-100 text-primary-700' : 'bg-slate-100 text-slate-600'}`}>{t.tools.baseFromPercent}</button>
       </div>
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <div><label className="label">{mode === 'of' ? t.tools.percentage : mode === 'is' ? t.common.value : t.tools.finalValue}</label><input className="input" type="number" value={a} onChange={(e) => setA(e.target.value)} /></div>
-        <div><label className="label">{mode === 'of' ? t.tools.ofValue : mode === 'is' ? t.tools.total : t.tools.percentageApplied}</label><input className="input" type="number" value={b} onChange={(e) => setB(e.target.value)} /></div>
+        <div><label className="label">{mode === 'of' ? t.tools.percentage : mode === 'is' ? t.common.value : t.tools.finalValue}</label><input name="valueA" className="input" type="number" value={a} onChange={(e) => setA(e.target.value)} /></div>
+        <div><label className="label">{mode === 'of' ? t.tools.ofValue : mode === 'is' ? t.tools.total : t.tools.percentageApplied}</label><input name="valueB" className="input" type="number" value={b} onChange={(e) => setB(e.target.value)} /></div>
       </div>
       <div className="bg-slate-50 rounded-lg p-4 text-center">
         <div className="text-xs text-slate-500 mb-1">{t.tools.result}</div>
@@ -161,8 +161,8 @@ function MarginCalculator() {
     <div className="card p-5">
       <h2 className="text-sm font-semibold text-slate-900 mb-4">{t.tools.marginCalculator}</h2>
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <div><label className="label">{t.tools.costPrice}</label><input className="input" type="number" value={cost} onChange={(e) => setCost(e.target.value)} /></div>
-        <div><label className="label">{t.tools.sellingPrice}</label><input className="input" type="number" value={selling} onChange={(e) => setSelling(e.target.value)} /></div>
+        <div><label className="label">{t.tools.costPrice}</label><input name="costPrice" className="input" type="number" value={cost} onChange={(e) => setCost(e.target.value)} /></div>
+        <div><label className="label">{t.tools.sellingPrice}</label><input name="sellingPrice" className="input" type="number" value={selling} onChange={(e) => setSelling(e.target.value)} /></div>
       </div>
       <div className="bg-slate-50 rounded-lg p-3 space-y-2 text-sm">
         <div className="flex justify-between"><span className="text-slate-500">{t.tools.profit}</span><span className={`font-semibold ${profit >= 0 ? 'text-success-600' : 'text-danger-600'}`}>{fmtCur(profit)}</span></div>
@@ -201,11 +201,11 @@ function DateCalculator() {
       <h2 className="text-sm font-semibold text-slate-900 mb-4">{t.tools.dateCalculator}</h2>
       <div className="space-y-3 mb-4">
         <div className="grid grid-cols-2 gap-3">
-          <div><label className="label">{t.tools.startDate}</label><input className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
-          <div><label className="label">{t.tools.addSubtractDays}</label><input className="input" type="number" value={days} onChange={(e) => setDays(e.target.value)} /></div>
+          <div><label className="label">{t.tools.startDate}</label><input name="startDate" className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
+          <div><label className="label">{t.tools.addSubtractDays}</label><input name="days" className="input" type="number" value={days} onChange={(e) => setDays(e.target.value)} /></div>
         </div>
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={bizOnly} onChange={(e) => setBizOnly(e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-primary-600" />
+          <input name="bizOnly" type="checkbox" checked={bizOnly} onChange={(e) => setBizOnly(e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-primary-600" />
           <span className="text-sm text-slate-700">{t.tools.businessDaysOnly}</span>
         </label>
         <div className="bg-slate-50 rounded-lg p-3 text-center">
@@ -216,8 +216,8 @@ function DateCalculator() {
       <div className="border-t border-slate-200 pt-3">
         <div className="text-xs font-semibold text-slate-700 mb-2">{t.tools.daysBetweenDates}</div>
         <div className="grid grid-cols-2 gap-3">
-          <div><input className="input" type="date" value={date1} onChange={(e) => setDate1(e.target.value)} /></div>
-          <div><input className="input" type="date" value={date2} onChange={(e) => setDate2(e.target.value)} /></div>
+          <div><input name="date1" className="input" type="date" value={date1} onChange={(e) => setDate1(e.target.value)} /></div>
+          <div><input name="date2" className="input" type="date" value={date2} onChange={(e) => setDate2(e.target.value)} /></div>
         </div>
         {daysBetween !== null && (
           <div className="text-center mt-2 text-sm font-semibold text-slate-900">{Math.abs(daysBetween)} {t.tools.days} {daysBetween < 0 ? t.tools.daysBefore : t.tools.daysAfter}</div>
@@ -248,9 +248,9 @@ function PriceComparison() {
       <div className="space-y-2 mb-4">
         {plans.map((plan, i) => (
           <div key={i} className="flex gap-2 items-center">
-            <input className="input w-24" placeholder={t.clients.name} value={plan.name} onChange={(e) => { const p = [...plans]; p[i] = { ...p[i], name: e.target.value }; setPlans(p); }} />
-            <input className="input w-20" type="number" placeholder={t.common.value} value={plan.price} onChange={(e) => { const p = [...plans]; p[i] = { ...p[i], price: e.target.value }; setPlans(p); }} />
-            <select className="select w-24" value={plan.period} onChange={(e) => { const p = [...plans]; p[i] = { ...p[i], period: e.target.value }; setPlans(p); }}>
+            <input name="planName" className="input w-24" placeholder={t.clients.name} value={plan.name} onChange={(e) => { const p = [...plans]; p[i] = { ...p[i], name: e.target.value }; setPlans(p); }} />
+            <input name="planPrice" className="input w-20" type="number" placeholder={t.common.value} value={plan.price} onChange={(e) => { const p = [...plans]; p[i] = { ...p[i], price: e.target.value }; setPlans(p); }} />
+            <select name="planPeriod" className="select w-24" value={plan.period} onChange={(e) => { const p = [...plans]; p[i] = { ...p[i], period: e.target.value }; setPlans(p); }}>
               <option value="monthly">{t.tools.monthly}</option><option value="yearly">{t.tools.yearly}</option>
             </select>
             {plans.length > 2 && (

@@ -143,13 +143,13 @@ export default function Goals() {
       {/* Filters */}
       {hasAnyGoals && (
         <div className="flex items-center gap-3 mb-6">
-          <select className="select w-40" value={periodFilter} onChange={(e) => setPeriodFilter(e.target.value as any)}>
+          <select name="periodFilter" className="select w-40" value={periodFilter} onChange={(e) => setPeriodFilter(e.target.value as any)}>
             <option value="all">{t.goals.allPeriods}</option>
             <option value="month">{t.goals.month}</option>
             <option value="half_year">{t.goals.halfYear}</option>
             <option value="year">{t.goals.year}</option>
           </select>
-          <select className="select w-44" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)}>
+          <select name="statusFilter" className="select w-44" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)}>
             <option value="all">{t.goals.allStatuses}</option>
             <option value="in_progress">{t.goals.inProgress}</option>
             <option value="completed">{t.goals.completed}</option>
@@ -239,13 +239,13 @@ export default function Goals() {
         <div className="space-y-4">
           <div>
             <label className="label">{t.goals.goalTitle} *</label>
-            <input className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} autoFocus />
+            <input name="title" className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} autoFocus />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">{t.goals.period}</label>
-              <select className="select" value={form.period} onChange={(e) => setForm({ ...form, period: e.target.value as GoalPeriod })}>
+              <select name="period" className="select" value={form.period} onChange={(e) => setForm({ ...form, period: e.target.value as GoalPeriod })}>
                 <option value="month">{t.goals.month}</option>
                 <option value="half_year">{t.goals.halfYear}</option>
                 <option value="year">{t.goals.year}</option>
@@ -253,7 +253,7 @@ export default function Goals() {
             </div>
             <div>
               <label className="label">{t.goals.status}</label>
-              <select className="select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as GoalStatus })}>
+              <select name="status" className="select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as GoalStatus })}>
                 <option value="in_progress">{t.goals.inProgress}</option>
                 <option value="completed">{t.goals.completed}</option>
                 <option value="partially_completed">{t.goals.partiallyCompleted}</option>
@@ -265,6 +265,7 @@ export default function Goals() {
           <div>
             <label className="label">{t.goals.reflection}</label>
             <textarea
+              name="reflection"
               className="textarea"
               rows={3}
               value={form.reflection}

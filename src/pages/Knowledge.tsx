@@ -124,7 +124,7 @@ export default function Knowledge() {
       {/* Search */}
       <div className="relative max-w-md mb-6">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input className="input pl-9" placeholder={t.knowledge.searchKnowledge} value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input name="search" className="input pl-9" placeholder={t.knowledge.searchKnowledge} value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       {/* Entries List */}
@@ -208,18 +208,18 @@ export default function Knowledge() {
           </div>
 
           <div><label className="label">{t.common.title} *</label>
-            <input className="input" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} /></div>
+            <input name="title" className="input" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} /></div>
           <div><label className="label">{t.common.category}</label>
-            <select className="select" value={formCategory} onChange={(e) => setFormCategory(e.target.value)}>
+            <select name="category" className="select" value={formCategory} onChange={(e) => setFormCategory(e.target.value)}>
               {categories.filter(c => c.key !== 'all').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
             </select>
           </div>
           <div><label className="label">{t.knowledge.content}</label>
-            <textarea className="textarea" rows={10} value={formContent} onChange={(e) => setFormContent(e.target.value)} /></div>
+            <textarea name="content" className="textarea" rows={10} value={formContent} onChange={(e) => setFormContent(e.target.value)} /></div>
 
-          <div><label className="label">{t.clients.tagsSeparated}</label><input className="input" value={formTags} onChange={(e) => setFormTags(e.target.value)} /></div>
+          <div><label className="label">{t.clients.tagsSeparated}</label><input name="tags" className="input" value={formTags} onChange={(e) => setFormTags(e.target.value)} /></div>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={formPinned} onChange={(e) => setFormPinned(e.target.checked)}
+            <input name="pinned" type="checkbox" checked={formPinned} onChange={(e) => setFormPinned(e.target.checked)}
               className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
             <span className="text-sm text-slate-700">{t.knowledge.pinThisEntry}</span>
           </label>

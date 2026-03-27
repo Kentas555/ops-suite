@@ -120,7 +120,7 @@ export default function ClientDetail() {
         </div>
         {editingNextAction ? (
           <div className="flex items-center gap-2 mt-2">
-            <input ref={nextActionRef} className="input text-sm flex-1" value={nextActionDraft}
+            <input ref={nextActionRef} name="nextAction" className="input text-sm flex-1" value={nextActionDraft}
               onChange={(e) => setNextActionDraft(e.target.value)} placeholder={t.crm.nextActionPlaceholder}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSaveNextAction(); if (e.key === 'Escape') setEditingNextAction(false); }} autoFocus />
             <button onClick={handleSaveNextAction} className="p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200"><Check size={14} /></button>
@@ -152,7 +152,7 @@ export default function ClientDetail() {
           ))}
         </div>
         <div className="flex gap-2">
-          <input ref={interactionInputRef} className="input text-sm flex-1" value={interactionNote}
+          <input ref={interactionInputRef} name="interactionNote" className="input text-sm flex-1" value={interactionNote}
             onChange={(e) => setInteractionNote(e.target.value)} placeholder={t.crm.whatHappened}
             onKeyDown={(e) => { if (e.key === 'Enter') handleLogInteraction(); }} />
           <button onClick={handleLogInteraction} className="btn-primary btn-sm" disabled={!interactionNote.trim()}>
@@ -210,7 +210,7 @@ export default function ClientDetail() {
               <div className="flex justify-between"><span className="text-slate-500">{t.common.status}</span><StatusBadge status={client.status} /></div>
             </div>
             <div className="mt-3 pt-3 border-t border-slate-100">
-              <select className="select text-xs" value={client.status}
+              <select name="status" className="select text-xs" value={client.status}
                 onChange={(e) => updateClient(client.id, { status: e.target.value as any })}>
                 <option value="prospect">{t.clients.prospect}</option>
                 <option value="onboarding">{t.clients.onboarding}</option>
@@ -282,12 +282,12 @@ export default function ClientDetail() {
             }}>{t.common.add}</button></>
           }>
             <div className="space-y-3">
-              <div><label className="label">{t.common.title} *</label><input className="input" value={taskForm.title} onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })} /></div>
-              <div><label className="label">{t.common.description}</label><textarea className="textarea" rows={2} value={taskForm.description} onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })} /></div>
+              <div><label className="label">{t.common.title} *</label><input name="title" className="input" value={taskForm.title} onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })} /></div>
+              <div><label className="label">{t.common.description}</label><textarea name="description" className="textarea" rows={2} value={taskForm.description} onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })} /></div>
               <div className="grid grid-cols-3 gap-3">
-                <div><label className="label">{t.common.priority}</label><select className="select" value={taskForm.priority} onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}><option value="urgent">{t.tasks.urgent}</option><option value="high">{t.tasks.high}</option><option value="medium">{t.tasks.medium}</option><option value="low">{t.tasks.low}</option></select></div>
-                <div><label className="label">{t.common.category}</label><select className="select" value={taskForm.category} onChange={(e) => setTaskForm({ ...taskForm, category: e.target.value })}><option value="follow-up">{t.tasks.followUp}</option><option value="contract">{t.tasks.contract}</option><option value="account">{t.tasks.account}</option><option value="document">{t.tasks.document}</option><option value="communication">{t.tasks.communication}</option><option value="onboarding">{t.tasks.onboarding}</option></select></div>
-                <div><label className="label">{t.tasks.dueDate}</label><input className="input" type="date" value={taskForm.dueDate} onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })} /></div>
+                <div><label className="label">{t.common.priority}</label><select name="priority" className="select" value={taskForm.priority} onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}><option value="urgent">{t.tasks.urgent}</option><option value="high">{t.tasks.high}</option><option value="medium">{t.tasks.medium}</option><option value="low">{t.tasks.low}</option></select></div>
+                <div><label className="label">{t.common.category}</label><select name="category" className="select" value={taskForm.category} onChange={(e) => setTaskForm({ ...taskForm, category: e.target.value })}><option value="follow-up">{t.tasks.followUp}</option><option value="contract">{t.tasks.contract}</option><option value="account">{t.tasks.account}</option><option value="document">{t.tasks.document}</option><option value="communication">{t.tasks.communication}</option><option value="onboarding">{t.tasks.onboarding}</option></select></div>
+                <div><label className="label">{t.tasks.dueDate}</label><input name="dueDate" className="input" type="date" value={taskForm.dueDate} onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })} /></div>
               </div>
             </div>
           </Modal>

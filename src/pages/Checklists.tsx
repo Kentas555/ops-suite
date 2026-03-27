@@ -74,7 +74,7 @@ export default function Checklists() {
       {/* Search */}
       <div className="relative max-w-md mb-4">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input className="input pl-9" placeholder={t.checklists.searchChecklists} value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input name="search" className="input pl-9" placeholder={t.checklists.searchChecklists} value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       {/* Checklist Table */}
@@ -205,15 +205,15 @@ export default function Checklists() {
         footer={<><button className="btn-secondary" onClick={() => setShowAdd(false)}>{t.common.cancel}</button><button className="btn-primary" onClick={handleAdd}>{t.common.create}</button></>}
       >
         <div className="space-y-4">
-          <div><label className="label">{t.common.title} *</label><input className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-          <div><label className="label">{t.common.description}</label><textarea className="textarea" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+          <div><label className="label">{t.common.title} *</label><input name="title" className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+          <div><label className="label">{t.common.description}</label><textarea name="description" className="textarea" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-4">
             <div><label className="label">{t.common.category}</label>
-              <select className="select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+              <select name="category" className="select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                 {categoryOptions.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-            <div><label className="label">{t.checklists.estimatedTime}</label><input className="input" placeholder="e.g. 2-3 days" value={form.estimatedTime} onChange={(e) => setForm({ ...form, estimatedTime: e.target.value })} /></div>
+            <div><label className="label">{t.checklists.estimatedTime}</label><input name="estimatedTime" className="input" placeholder="e.g. 2-3 days" value={form.estimatedTime} onChange={(e) => setForm({ ...form, estimatedTime: e.target.value })} /></div>
           </div>
           <div>
             <label className="label">{t.checklists.stepsLabel}</label>
@@ -222,15 +222,15 @@ export default function Checklists() {
                 <div key={i} className="flex gap-2 items-start">
                   <span className="text-xs text-slate-400 mt-2.5 w-4">{i + 1}.</span>
                   <div className="flex-1 space-y-1">
-                    <input className="input" placeholder={t.checklists.stepDescription} value={item.text} onChange={(e) => {
+                    <input name="stepText" className="input" placeholder={t.checklists.stepDescription} value={item.text} onChange={(e) => {
                       const items = [...form.items]; items[i] = { ...items[i], text: e.target.value }; setForm({ ...form, items });
                     }} />
-                    <input className="input text-xs" placeholder={t.checklists.helpTextOptional} value={item.helpText} onChange={(e) => {
+                    <input name="stepHelpText" className="input text-xs" placeholder={t.checklists.helpTextOptional} value={item.helpText} onChange={(e) => {
                       const items = [...form.items]; items[i] = { ...items[i], helpText: e.target.value }; setForm({ ...form, items });
                     }} />
                   </div>
                   <label className="flex items-center gap-1 mt-2">
-                    <input type="checkbox" checked={item.isRequired} onChange={(e) => {
+                    <input name="stepRequired" type="checkbox" checked={item.isRequired} onChange={(e) => {
                       const items = [...form.items]; items[i] = { ...items[i], isRequired: e.target.checked }; setForm({ ...form, items });
                     }} className="w-3 h-3 rounded border-slate-300 text-primary-600" />
                     <span className="text-[10px] text-slate-500">{t.checklists.req}</span>

@@ -181,13 +181,13 @@ export default function Tasks() {
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <div className="relative flex-1 max-w-xs">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input className="input pl-9" placeholder={t.tasks.searchTasks} value={search} onChange={(e) => setSearch(e.target.value)} />
+          <input name="search" className="input pl-9" placeholder={t.tasks.searchTasks} value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select className="select w-32" value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
+        <select name="priorityFilter" className="select w-32" value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
           <option value="all">{t.tasks.allPriority}</option>
           <option value="urgent">{t.tasks.urgent}</option><option value="high">{t.tasks.high}</option><option value="medium">{t.tasks.medium}</option><option value="low">{t.tasks.low}</option>
         </select>
-        <select className="select w-36" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+        <select name="categoryFilter" className="select w-36" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
           <option value="all">{t.tasks.allCategories}</option>
           <option value="contract">{t.tasks.contract}</option><option value="account">{t.tasks.account}</option><option value="follow-up">{t.tasks.followUp}</option>
           <option value="onboarding">{t.tasks.onboarding}</option><option value="document">{t.tasks.document}</option><option value="communication">{t.tasks.communication}</option>
@@ -425,7 +425,7 @@ export default function Tasks() {
 
             <div>
               <label className="label">{t.common.status}</label>
-              <select className="select w-48" value={task.status} onChange={(e) => updateTask(task.id, { status: e.target.value as any })}>
+              <select name="status" className="select w-48" value={task.status} onChange={(e) => updateTask(task.id, { status: e.target.value as any })}>
                 <option value="todo">{t.tasks.toDo}</option><option value="in_progress">{t.tasks.inProgress}</option><option value="waiting">{t.tasks.waiting}</option>
                 <option value="blocked">{t.tasks.blocked}</option><option value="completed">{t.tasks.completed}</option>
               </select>
@@ -438,7 +438,7 @@ export default function Tasks() {
                   {task.checklistItems.map(ci => (
                     <label key={ci.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 cursor-pointer">
                       <input type="checkbox" checked={ci.completed} onChange={() => toggleTaskChecklistItem(task.id, ci.id)}
-                        className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
+                        name="checklistItem" className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
                       <span className={`text-sm ${ci.completed ? 'line-through text-slate-400' : 'text-slate-700'}`}>{ci.text}</span>
                     </label>
                   ))}
@@ -461,22 +461,22 @@ export default function Tasks() {
         footer={<><button className="btn-secondary" onClick={() => { setShowAdd(false); setSearchParams({}); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleAdd}>{t.tasks.createTask}</button></>}
       >
         <div className="space-y-4">
-          <div><label className="label">{t.common.title} *</label><input className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-          <div><label className="label">{t.common.description}</label><textarea className="textarea" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+          <div><label className="label">{t.common.title} *</label><input name="title" className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+          <div><label className="label">{t.common.description}</label><textarea name="description" className="textarea" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
           <div className="grid grid-cols-4 gap-4">
-            <div><label className="label">{t.common.priority}</label><select className="select" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}><option value="urgent">{t.tasks.urgent}</option><option value="high">{t.tasks.high}</option><option value="medium">{t.tasks.medium}</option><option value="low">{t.tasks.low}</option></select></div>
-            <div><label className="label">{t.common.category}</label><select className="select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}><option value="follow-up">{t.tasks.followUp}</option><option value="contract">{t.tasks.contract}</option><option value="account">{t.tasks.account}</option><option value="document">{t.tasks.document}</option><option value="communication">{t.tasks.communication}</option><option value="onboarding">{t.tasks.onboarding}</option><option value="other">{t.tasks.other}</option></select></div>
-            <div><label className="label">{t.tasks.dueDate}</label><input className="input" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} /></div>
-            <div><label className="label">{lang === 'lt' ? 'Laikas' : 'Time'}</label><input className="input" type="time" value={form.dueTime} onChange={(e) => setForm({ ...form, dueTime: e.target.value })} /></div>
+            <div><label className="label">{t.common.priority}</label><select name="priority" className="select" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}><option value="urgent">{t.tasks.urgent}</option><option value="high">{t.tasks.high}</option><option value="medium">{t.tasks.medium}</option><option value="low">{t.tasks.low}</option></select></div>
+            <div><label className="label">{t.common.category}</label><select name="category" className="select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}><option value="follow-up">{t.tasks.followUp}</option><option value="contract">{t.tasks.contract}</option><option value="account">{t.tasks.account}</option><option value="document">{t.tasks.document}</option><option value="communication">{t.tasks.communication}</option><option value="onboarding">{t.tasks.onboarding}</option><option value="other">{t.tasks.other}</option></select></div>
+            <div><label className="label">{t.tasks.dueDate}</label><input name="dueDate" className="input" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} /></div>
+            <div><label className="label">{lang === 'lt' ? 'Laikas' : 'Time'}</label><input name="dueTime" className="input" type="time" value={form.dueTime} onChange={(e) => setForm({ ...form, dueTime: e.target.value })} /></div>
           </div>
           <div><label className="label">{t.tasks.clientOptional}</label>
-            <select className="select" value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
+            <select name="clientId" className="select" value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
               <option value="">{t.common.noClient}</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
             </select>
           </div>
-          <div><label className="label">{t.tasks.checklistItems}</label><textarea className="textarea" rows={3} value={form.checklistItems} onChange={(e) => setForm({ ...form, checklistItems: e.target.value })} /></div>
-          <div><label className="label">{t.common.notes}</label><textarea className="textarea" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <div><label className="label">{t.tasks.checklistItems}</label><textarea name="checklistItems" className="textarea" rows={3} value={form.checklistItems} onChange={(e) => setForm({ ...form, checklistItems: e.target.value })} /></div>
+          <div><label className="label">{t.common.notes}</label><textarea name="notes" className="textarea" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
         </div>
       </Modal>
     </div>

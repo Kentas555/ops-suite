@@ -105,9 +105,9 @@ export default function Communications() {
             <button className="btn-primary" onClick={() => setShowAddLog(true)}><Plus size={16} /> {t.comms.logCommunication}</button>
             <div className="relative flex-1 max-w-xs">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input className="input pl-9" placeholder={t.comms.searchComms} value={search} onChange={(e) => setSearch(e.target.value)} />
+              <input name="search" className="input pl-9" placeholder={t.comms.searchComms} value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
-            <select className="select w-36" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+            <select name="typeFilter" className="select w-36" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
               <option value="all">{t.comms.allTypes}</option>
               <option value="email">{t.comms.email}</option><option value="phone">{t.comms.phone}</option><option value="meeting">{t.comms.meeting}</option><option value="internal_note">{t.comms.internalNote}</option>
             </select>
@@ -145,13 +145,13 @@ export default function Communications() {
           >
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="label">{t.common.type}</label><select className="select" value={logForm.type} onChange={(e) => setLogForm({ ...logForm, type: e.target.value })}><option value="email">{t.comms.email}</option><option value="phone">{t.comms.phone}</option><option value="meeting">{t.comms.meeting}</option><option value="internal_note">{t.comms.internalNote}</option></select></div>
-                <div><label className="label">{t.common.client}</label><select className="select" value={logForm.clientId} onChange={(e) => setLogForm({ ...logForm, clientId: e.target.value })}><option value="">{t.common.select}</option>{clients.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}</select></div>
+                <div><label className="label">{t.common.type}</label><select name="type" className="select" value={logForm.type} onChange={(e) => setLogForm({ ...logForm, type: e.target.value })}><option value="email">{t.comms.email}</option><option value="phone">{t.comms.phone}</option><option value="meeting">{t.comms.meeting}</option><option value="internal_note">{t.comms.internalNote}</option></select></div>
+                <div><label className="label">{t.common.client}</label><select name="clientId" className="select" value={logForm.clientId} onChange={(e) => setLogForm({ ...logForm, clientId: e.target.value })}><option value="">{t.common.select}</option>{clients.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}</select></div>
               </div>
-              <div><label className="label">{t.clients.contactPerson}</label><input className="input" value={logForm.contactPerson} onChange={(e) => setLogForm({ ...logForm, contactPerson: e.target.value })} /></div>
-              <div><label className="label">{t.clients.subject} *</label><input className="input" value={logForm.subject} onChange={(e) => setLogForm({ ...logForm, subject: e.target.value })} /></div>
-              <div><label className="label">{t.clients.summary}</label><textarea className="textarea" rows={4} value={logForm.summary} onChange={(e) => setLogForm({ ...logForm, summary: e.target.value })} /></div>
-              <div><label className="label">{t.clients.nextAction}</label><input className="input" value={logForm.nextAction} onChange={(e) => setLogForm({ ...logForm, nextAction: e.target.value })} /></div>
+              <div><label className="label">{t.clients.contactPerson}</label><input name="contactPerson" className="input" value={logForm.contactPerson} onChange={(e) => setLogForm({ ...logForm, contactPerson: e.target.value })} /></div>
+              <div><label className="label">{t.clients.subject} *</label><input name="subject" className="input" value={logForm.subject} onChange={(e) => setLogForm({ ...logForm, subject: e.target.value })} /></div>
+              <div><label className="label">{t.clients.summary}</label><textarea name="summary" className="textarea" rows={4} value={logForm.summary} onChange={(e) => setLogForm({ ...logForm, summary: e.target.value })} /></div>
+              <div><label className="label">{t.clients.nextAction}</label><input name="nextAction" className="input" value={logForm.nextAction} onChange={(e) => setLogForm({ ...logForm, nextAction: e.target.value })} /></div>
             </div>
           </Modal>
         </>
@@ -216,7 +216,7 @@ export default function Communications() {
                     {activeTpl.variables.map(v => (
                       <div key={v}>
                         <label className="label">{v.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</label>
-                        <input className="input" value={tplVars[v] || ''} onChange={(e) => setTplVars({ ...tplVars, [v]: e.target.value })} />
+                        <input name={v} className="input" value={tplVars[v] || ''} onChange={(e) => setTplVars({ ...tplVars, [v]: e.target.value })} />
                       </div>
                     ))}
                   </div>
@@ -242,15 +242,15 @@ export default function Communications() {
           >
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="label">{t.common.title} *</label><input className="input" value={tplForm.title} onChange={(e) => setTplForm({ ...tplForm, title: e.target.value })} /></div>
+                <div><label className="label">{t.common.title} *</label><input name="title" className="input" value={tplForm.title} onChange={(e) => setTplForm({ ...tplForm, title: e.target.value })} /></div>
                 <div><label className="label">{t.common.category}</label>
-                  <select className="select" value={tplForm.category} onChange={(e) => setTplForm({ ...tplForm, category: e.target.value })}>
+                  <select name="category" className="select" value={tplForm.category} onChange={(e) => setTplForm({ ...tplForm, category: e.target.value })}>
                     <option>Welcome</option><option>Follow-up</option><option>Documents</option><option>Contracts</option><option>Issues</option><option>Payments</option><option>Meetings</option>
                   </select>
                 </div>
               </div>
-              <div><label className="label">{t.comms.subjectOptional}</label><input className="input" value={tplForm.subject} onChange={(e) => setTplForm({ ...tplForm, subject: e.target.value })} placeholder={t.comms.variablePlaceholder} /></div>
-              <div><label className="label">{t.comms.body}</label><textarea className="textarea" rows={10} value={tplForm.body} onChange={(e) => setTplForm({ ...tplForm, body: e.target.value })} placeholder={t.comms.variablePlaceholder} /></div>
+              <div><label className="label">{t.comms.subjectOptional}</label><input name="subject" className="input" value={tplForm.subject} onChange={(e) => setTplForm({ ...tplForm, subject: e.target.value })} placeholder={t.comms.variablePlaceholder} /></div>
+              <div><label className="label">{t.comms.body}</label><textarea name="body" className="textarea" rows={10} value={tplForm.body} onChange={(e) => setTplForm({ ...tplForm, body: e.target.value })} placeholder={t.comms.variablePlaceholder} /></div>
               <p className="text-xs text-slate-500">{t.comms.variablesHint}</p>
             </div>
           </Modal>
