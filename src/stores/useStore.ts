@@ -365,6 +365,7 @@ interface AppState {
   // Account Workflows
   addAccountWorkflow: (workflow: Omit<AccountWorkflow, 'id' | 'createdAt' | 'ownerId'>) => Promise<void>;
   updateAccountWorkflow: (id: string, updates: Partial<AccountWorkflow>) => Promise<void>;
+  deleteAccountWorkflow: (id: string) => Promise<void>;
   updateWorkflowStep: (workflowId: string, stepId: string, updates: Partial<WorkflowStep>) => Promise<void>;
 
   // Communication Logs
@@ -579,6 +580,11 @@ const useStore = create<AppState>()(
         const { error } = await supabase.from('account_workflows').update(workflowToDb(updates)).eq('id', id);
         if (error) console.error('[updateAccountWorkflow] UPDATE failed:', error.message);
       },
+      deleteAccountWorkflow: async (id) => {
+        set(s => ({ accountWorkflows: s.accountWorkflows.filter(w => w.id !== id) }));
+        const { error } = await supabase.from('account_workflows').delete().eq('id', id);
+        if (error) console.error('[deleteAccountWorkflow] DELETE failed:', error.message);
+      },
       updateWorkflowStep: async (workflowId, stepId, updates) => {
         const workflow = get().accountWorkflows.find(w => w.id === workflowId);
         if (!workflow) return;
@@ -670,7 +676,10 @@ const useStore = create<AppState>()(
         const newNote: QuickNote = { ...noteData, id, createdAt: now() };
         set(s => ({ quickNotes: [...s.quickNotes, newNote] }));
         const { error } = await supabase.from('quick_notes').insert(quickNoteToDb(newNote));
-        if (error) console.error('[addQuickNote] INSERT failed:', error.message);
+        if (error) {
+          console.error('[addQuickNote] INSERT failed:', error.message);
+          set(s => ({ quickNotes: s.quickNotes.filter(n => n.id !== id) }));
+        }
       },
       updateQuickNote: async (id, updates) => {
         set(s => ({ quickNotes: s.quickNotes.map(n => n.id === id ? { ...n, ...updates } : n) }));
@@ -689,7 +698,10 @@ const useStore = create<AppState>()(
         const newTemplate: CommunicationTemplate = { ...templateData, id };
         set(s => ({ communicationTemplates: [...s.communicationTemplates, newTemplate] }));
         const { error } = await supabase.from('communication_templates').insert({ id, ...templateData });
-        if (error) console.error('[addCommunicationTemplate] INSERT failed:', error.message);
+        if (error) {
+          console.error('[addCommunicationTemplate] INSERT failed:', error.message);
+          set(s => ({ communicationTemplates: s.communicationTemplates.filter(t => t.id !== id) }));
+        }
       },
       updateCommunicationTemplate: async (id, updates) => {
         set(s => ({
@@ -711,7 +723,10 @@ const useStore = create<AppState>()(
         const newReply: QuickReply = { ...replyData, id, usageCount: 0, createdAt: n, updatedAt: n };
         set(s => ({ quickReplies: [...s.quickReplies, newReply] }));
         const { error } = await supabase.from('quick_replies').insert(quickReplyToDb(newReply));
-        if (error) console.error('[addQuickReply] INSERT failed:', error.message);
+        if (error) {
+          console.error('[addQuickReply] INSERT failed:', error.message);
+          set(s => ({ quickReplies: s.quickReplies.filter(r => r.id !== id) }));
+        }
       },
       updateQuickReply: async (id, updates) => {
         const n = now();

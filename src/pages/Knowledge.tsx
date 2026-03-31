@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Pin, PinOff, Edit2, Trash2, FileText, AlertTriangle, HelpCircle, Lightbulb, BookOpen, MessageSquare, Copy, Check } from 'lucide-react';
+import { Plus, Search, Pin, PinOff, Edit2, Trash2, FileText, AlertTriangle, HelpCircle, Lightbulb, BookOpen, MessageSquare, Copy } from 'lucide-react';
 import useStore from '../stores/useStore';
 import { formatDate } from '../utils/helpers';
 import Modal from '../components/ui/Modal';

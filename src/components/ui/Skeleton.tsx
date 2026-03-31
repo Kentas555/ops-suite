@@ -4,9 +4,6 @@ export function SkeletonLine({ width = '100%', height = 12 }: { width?: string |
   return <div className="skeleton-shimmer rounded" style={{ width, height, minHeight: height }} />;
 }
 
-export function SkeletonCircle({ size = 32 }: { size?: number }) {
-  return <div className="skeleton-shimmer rounded-full" style={{ width: size, height: size }} />;
-}
 
 export function SkeletonBlock({ height = 80, className = '' }: { height?: number; className?: string }) {
   return <div className={`skeleton-shimmer rounded-lg ${className}`} style={{ height }} />;

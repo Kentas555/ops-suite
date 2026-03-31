@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, Edit2, Plus, FileText, User, PhoneCall, Mail, MessageSquare, Check, X, Send, TrendingUp, AlertTriangle, Zap } from 'lucide-react';
+import { ArrowLeft, Phone, Edit2, Plus, FileText, User, PhoneCall, Mail, MessageSquare, Check, X, Send, TrendingUp, AlertTriangle } from 'lucide-react';
 import useStore from '../stores/useStore';
 import { formatDate, daysAgoCount } from '../utils/helpers';
 import { computeClientHealth, HEALTH_CONFIG } from '../utils/clientHealth';

@@ -134,10 +134,8 @@ const useAuthStore = create<AuthState>()((set, get) => ({
       .order('created_at');
     if (error) {
       console.error('[fetchProfiles] Supabase error:', error.message, error.code, error.details);
-      // Surface error to UI via a profiles-level flag
       return;
     }
-    console.log('[fetchProfiles] loaded', data?.length, 'profiles');
     if (data) {
       set({ profiles: data.map(row => mapProfile(row)) });
     }
