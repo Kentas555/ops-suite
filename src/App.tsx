@@ -27,7 +27,6 @@ function AppLoader({ children }: { children: React.ReactNode }) {
   const authInitialized = useAuthStore(s => s.initialized);
   const session = useAuthStore(s => s.session);
   const initialize = useAuthStore(s => s.initialize);
-  const dataInitialized = useStore(s => s.initialized);
   const fetchAll = useStore(s => s.fetchAll);
   const fetchReminders = useReminderStore(s => s.fetchReminders);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -46,22 +45,9 @@ function AppLoader({ children }: { children: React.ReactNode }) {
     }
   }, [session, fetchAll, fetchReminders]);
 
-  // Wait for auth to initialize
+  // Only gate on auth — Layout + skeletons render while data loads
   if (!authInitialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-0, #f8fafc)' }}>
-        <div className="text-sm" style={{ color: 'var(--text-tertiary, #94a3b8)' }}>Loading...</div>
-      </div>
-    );
-  }
-
-  // If logged in, also wait for data before rendering any page
-  if (session && !dataInitialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-0, #f8fafc)' }}>
-        <div className="text-sm" style={{ color: 'var(--text-tertiary, #94a3b8)' }}>Loading...</div>
-      </div>
-    );
+    return null; // Blank until auth resolves (typically <100ms)
   }
 
   return <>{children}</>;
