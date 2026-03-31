@@ -222,8 +222,10 @@ export default function UserManagement() {
         })}
 
         {profiles.length === 0 && (
-          <div className="text-center py-12 text-slate-400 text-sm">
-            No users found.
+          <div className="text-center py-12 text-sm">
+            <p className="text-slate-400">No users found.</p>
+            <p className="text-xs text-slate-300 mt-2">If users exist in Supabase, check that the profiles RLS policy allows SELECT for authenticated users.</p>
+            <button className="btn-ghost btn-sm mt-3" onClick={() => fetchProfiles()}>Retry</button>
           </div>
         )}
       </div>
