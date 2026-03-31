@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Pin, PinOff, Edit2, Trash2, FileText, AlertTriangle, HelpCircle, Lightbulb, BookOpen, MessageSquare } from 'lucide-react';
+import { Plus, Search, Pin, PinOff, Edit2, Trash2, FileText, AlertTriangle, HelpCircle, Lightbulb, BookOpen, MessageSquare, Copy, Check } from 'lucide-react';
 import useStore from '../stores/useStore';
 import { formatDate } from '../utils/helpers';
 import Modal from '../components/ui/Modal';
@@ -36,6 +36,7 @@ export default function Knowledge() {
     { key: 'faq', label: t.knowledge.faq, icon: HelpCircle },
     { key: 'guideline', label: t.knowledge.guidelines, icon: FileText },
     { key: 'template', label: t.knowledge.templates, icon: MessageSquare },
+    { key: 'script', label: lang === 'lt' ? 'Scenarijai' : 'Scripts', icon: MessageSquare },
     { key: 'tip', label: t.knowledge.tips, icon: Lightbulb },
     { key: 'mistake_to_avoid', label: t.knowledge.mistakesToAvoid, icon: AlertTriangle },
   ];
@@ -179,6 +180,9 @@ export default function Knowledge() {
         footer={entry ? <>
           <button className="btn-ghost" onClick={async () => { await updateKnowledgeEntry(entry.id, { isPinned: !entry.isPinned }); }}>
             {entry.isPinned ? <><PinOff size={14} /> {t.common.unpin}</> : <><Pin size={14} /> {t.common.pin}</>}
+          </button>
+          <button className="btn-ghost" onClick={() => { navigator.clipboard.writeText(getText(entry.content, lang)); toast.success(t.toast.copied); }}>
+            <Copy size={14} /> {t.common.copy || 'Copy'}
           </button>
           <div className="flex-1" />
           <button className="btn-danger btn-sm" onClick={async () => { await deleteKnowledgeEntry(entry.id); setViewEntry(null); toast.success(t.toast.entryDeleted); }}><Trash2 size={14} /> {t.common.delete}</button>

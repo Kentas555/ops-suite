@@ -1,8 +1,9 @@
 import { useState, useMemo, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, Edit2, Plus, FileText, User, PhoneCall, Mail, MessageSquare, Check, X, Send } from 'lucide-react';
+import { ArrowLeft, Phone, Edit2, Plus, FileText, User, PhoneCall, Mail, MessageSquare, Check, X, Send, TrendingUp, AlertTriangle, Zap } from 'lucide-react';
 import useStore from '../stores/useStore';
 import { formatDate, daysAgoCount } from '../utils/helpers';
+import { computeClientHealth, HEALTH_CONFIG } from '../utils/clientHealth';
 import StatusBadge from '../components/ui/StatusBadge';
 import PriorityBadge from '../components/ui/PriorityBadge';
 import Modal from '../components/ui/Modal';
@@ -16,7 +17,7 @@ export default function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { clients, tasks, contracts, communicationLogs, updateClient, addTask, addInteraction } = useStore();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const toast = useToastStore();
   const client = clients.find(c => c.id === id);
   const [activeTab, setActiveTab] = useState('overview');
@@ -40,6 +41,8 @@ export default function ClientDetail() {
 
   const currentStageIndex = stages.indexOf(client.onboardingStage);
   const lastInteractionDays = daysAgoCount(client.lastInteractionAt);
+  const health = computeClientHealth(client, tasks);
+  const hCfg = HEALTH_CONFIG[health.status];
 
   const interactionTypes = [
     { key: 'phone' as const, label: t.crm.call },
@@ -104,6 +107,9 @@ export default function ClientDetail() {
           </div>
           <div className="flex items-center gap-3">
             <StatusBadge status={client.status} />
+            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${hCfg.bg} ${hCfg.color}`}>
+              {lang === 'lt' ? hCfg.labelLt : hCfg.label}
+            </span>
             {lastInteractionDays !== null && (
               <span className={`text-xs ${
                 lastInteractionDays <= 3 ? 'text-slate-400' :
@@ -115,6 +121,24 @@ export default function ClientDetail() {
             )}
           </div>
         </div>
+
+        {/* Triggers */}
+        {health.triggers.length > 0 && (
+          <div className="flex gap-2 mt-3 flex-wrap">
+            {health.triggers.map((trigger, i) => {
+              const Icon = trigger.type === 'follow_up' ? PhoneCall : trigger.type === 'overdue_task' ? AlertTriangle : TrendingUp;
+              const colors = trigger.type === 'overdue_task' ? 'bg-danger-50 text-danger-700 ring-danger-200' :
+                trigger.type === 'upsell' ? 'bg-purple-50 text-purple-700 ring-purple-200' :
+                'bg-amber-50 text-amber-700 ring-amber-200';
+              return (
+                <span key={i} className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ring-1 ${colors}`}>
+                  <Icon size={11} />
+                  {lang === 'lt' ? trigger.labelLt : trigger.label}
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Next Action */}

@@ -53,18 +53,18 @@ export function computeClientHealth(client: Client, tasks: Task[]): ClientHealth
     });
   }
 
-  // Upsell: active client, recent interaction, no pending tasks
+  // Upsell: active client, recent interaction (≤7 days), no pending tasks
   if (
-    status === 'active' &&
     (client.status === 'active' || client.status === 'onboarding') &&
-    days !== null && days <= 3 &&
+    days !== null && days <= 7 &&
     clientTasks.length === 0 &&
+    overdueCount === 0 &&
     triggers.length < 2
   ) {
     triggers.push({
       type: 'upsell',
-      label: 'Good relationship — consider upsell',
-      labelLt: 'Geras ryšys — apsvarstykite papildomą pasiūlymą',
+      label: 'Good moment — propose visibility boost',
+      labelLt: 'Geras momentas — pasiūlykite matomumo padidinimą',
     });
   }
 
