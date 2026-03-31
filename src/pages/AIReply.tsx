@@ -3,7 +3,7 @@ import { Copy, Check, RotateCcw, Trash2, ChevronDown, Wand2, FileText } from 'lu
 import useStore from '../stores/useStore';
 import useToastStore from '../stores/useToastStore';
 import { useTranslation } from '../i18n/useTranslation';
-import { generateReply, detectLanguage, AI_ENABLED, type AITone, type DetectedLanguage } from '../services/aiReplyService';
+import { generateReply, detectLanguage, type AITone, type DetectedLanguage } from '../services/aiReplyService';
 import { getText } from '../utils/bilingual';
 
 export default function AIReply() {
@@ -47,7 +47,7 @@ export default function AIReply() {
       setGeneratedReply(result.reply);
       setDetectedLang(result.detectedLanguage);
     } else {
-      toast.error(t.aiReply.generationFailed);
+      toast.error(result.error || t.aiReply.generationFailed);
     }
     setIsGenerating(false);
   };
@@ -94,8 +94,8 @@ export default function AIReply() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-slate-900">{t.aiReply.title}</h1>
-            <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 text-slate-600">
-              {AI_ENABLED ? t.aiReply.active : t.aiReply.preview}
+            <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary-50 text-primary-700">
+              Gemini
             </span>
           </div>
           <p className="text-sm text-slate-500 mt-1">{t.aiReply.subtitle}</p>
@@ -299,10 +299,6 @@ export default function AIReply() {
             )}
           </div>
 
-          {/* Preview mode note */}
-          {!AI_ENABLED && (
-            <p className="text-xs text-slate-400">{t.aiReply.previewNotice} {t.aiReply.previewNoticeDesc}</p>
-          )}
         </div>
       </div>
     </div>
