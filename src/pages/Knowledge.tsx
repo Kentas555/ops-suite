@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Pin, PinOff, Edit2, Trash2, FileText, AlertTriangle, HelpCircle, Lightbulb, CheckSquare, BookOpen, MessageSquare } from 'lucide-react';
+import { Plus, Search, Pin, PinOff, Edit2, Trash2, FileText, AlertTriangle, HelpCircle, Lightbulb, BookOpen, MessageSquare } from 'lucide-react';
 import useStore from '../stores/useStore';
 import { formatDate } from '../utils/helpers';
 import Modal from '../components/ui/Modal';
@@ -33,7 +33,6 @@ export default function Knowledge() {
     { key: 'all', label: t.knowledge.all, icon: BookOpen },
     { key: 'process', label: t.knowledge.processes, icon: FileText },
     { key: 'terminology', label: t.knowledge.terminology, icon: BookOpen },
-    { key: 'checklist', label: t.knowledge.checklists, icon: CheckSquare },
     { key: 'faq', label: t.knowledge.faq, icon: HelpCircle },
     { key: 'guideline', label: t.knowledge.guidelines, icon: FileText },
     { key: 'template', label: t.knowledge.templates, icon: MessageSquare },

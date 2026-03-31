@@ -138,25 +138,6 @@ export interface KnowledgeEntry extends VisibilityFields {
   updatedAt: string;
 }
 
-export interface SOPChecklist extends VisibilityFields {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  items: SOPItem[];
-  estimatedTime?: string;
-  lastUsed?: string;
-  usageCount: number;
-}
-
-export interface SOPItem {
-  id: string;
-  text: string;
-  helpText?: string;
-  isRequired: boolean;
-  order: number;
-}
-
 export interface QuickNote {
   id: string;
   content: string;

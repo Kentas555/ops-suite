@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabase';
 import type {
   Client, Task, Contract, AccountWorkflow, CommunicationLog,
-  KnowledgeEntry, SOPChecklist, QuickNote, CommunicationTemplate,
+  KnowledgeEntry, QuickNote, CommunicationTemplate,
   WorkflowStep, QuickReply, Goal,
 } from '../types';
 import type { Language } from '../i18n/translations';
@@ -232,33 +232,6 @@ function knowledgeToDb(e: Partial<KnowledgeEntry>): Record<string, unknown> {
   return d;
 }
 
-function mapSOP(r: Record<string, unknown>): SOPChecklist {
-  return {
-    ...mapVisibility(r),
-    id: r.id as string,
-    title: (r.title as string) || '',
-    description: (r.description as string) || '',
-    category: (r.category as string) || '',
-    items: (r.items as SOPChecklist['items']) || [],
-    estimatedTime: r.estimated_time as string | undefined,
-    lastUsed: r.last_used as string | undefined,
-    usageCount: (r.usage_count as number) || 0,
-  };
-}
-
-function sopToDb(c: Partial<SOPChecklist>): Record<string, unknown> {
-  const d: Record<string, unknown> = { ...visibilityToDb(c) };
-  if (c.id !== undefined) d.id = c.id;
-  if (c.title !== undefined) d.title = c.title;
-  if (c.description !== undefined) d.description = c.description;
-  if (c.category !== undefined) d.category = c.category;
-  if (c.items !== undefined) d.items = c.items;
-  if (c.estimatedTime !== undefined) d.estimated_time = c.estimatedTime;
-  if (c.lastUsed !== undefined) d.last_used = c.lastUsed;
-  if (c.usageCount !== undefined) d.usage_count = c.usageCount;
-  return d;
-}
-
 function mapQuickNote(r: Record<string, unknown>): QuickNote {
   return {
     id: r.id as string,
@@ -353,7 +326,6 @@ interface AppState {
   accountWorkflows: AccountWorkflow[];
   communicationLogs: CommunicationLog[];
   knowledgeEntries: KnowledgeEntry[];
-  sopChecklists: SOPChecklist[];
   quickNotes: QuickNote[];
   communicationTemplates: CommunicationTemplate[];
   quickReplies: QuickReply[];
@@ -394,10 +366,6 @@ interface AppState {
   updateKnowledgeEntry: (id: string, updates: Partial<KnowledgeEntry>) => Promise<void>;
   deleteKnowledgeEntry: (id: string) => Promise<void>;
 
-  // SOP Checklists
-  addSOPChecklist: (checklist: Omit<SOPChecklist, 'id' | 'ownerId'>) => Promise<void>;
-  updateSOPChecklist: (id: string, updates: Partial<SOPChecklist>) => Promise<void>;
-
   // Quick Notes
   addQuickNote: (note: Omit<QuickNote, 'id' | 'createdAt'>) => Promise<void>;
   updateQuickNote: (id: string, updates: Partial<QuickNote>) => Promise<void>;
@@ -422,9 +390,6 @@ interface AppState {
   // ── UI preferences (persisted to localStorage) ──
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  activeChecklistProgress: Record<string, Record<string, boolean>>;
-  toggleChecklistProgress: (checklistId: string, itemId: string) => void;
-  resetChecklistProgress: (checklistId: string) => void;
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
   darkMode: boolean;
@@ -445,7 +410,6 @@ const useStore = create<AppState>()(
       accountWorkflows: [],
       communicationLogs: [],
       knowledgeEntries: [],
-      sopChecklists: [],
       quickNotes: [],
       communicationTemplates: [],
       quickReplies: [],
@@ -461,17 +425,16 @@ const useStore = create<AppState>()(
           supabase.from('account_workflows').select('*').order('created_at'),
           supabase.from('communication_logs').select('*').order('created_at'),
           supabase.from('knowledge_entries').select('*').order('created_at'),
-          supabase.from('sop_checklists').select('*').order('title'),
           supabase.from('quick_notes').select('*').order('created_at'),
           supabase.from('communication_templates').select('*').order('title'),
           supabase.from('quick_replies').select('*').order('created_at'),
           supabase.from('goals').select('*').order('created_at'),
         ]);
 
-        const tables = ['clients','tasks','contracts','account_workflows','communication_logs','knowledge_entries','sop_checklists','quick_notes','communication_templates','quick_replies','goals'];
+        const tables = ['clients','tasks','contracts','account_workflows','communication_logs','knowledge_entries','quick_notes','communication_templates','quick_replies','goals'];
         results.forEach((r, i) => { if (r.error) console.error(`[fetchAll] ${tables[i]}:`, r.error.message); });
 
-        const [c, ta, co, aw, cl, ke, sc, qn, ct, qr, g] = results.map(r => r.data);
+        const [c, ta, co, aw, cl, ke, qn, ct, qr, g] = results.map(r => r.data);
 
         set({
           clients: (c || []).map(r => mapClient(r as Record<string, unknown>)),
@@ -480,7 +443,6 @@ const useStore = create<AppState>()(
           accountWorkflows: (aw || []).map(r => mapWorkflow(r as Record<string, unknown>)),
           communicationLogs: (cl || []).map(r => mapCommLog(r as Record<string, unknown>)),
           knowledgeEntries: (ke || []).map(r => mapKnowledge(r as Record<string, unknown>)),
-          sopChecklists: (sc || []).map(r => mapSOP(r as Record<string, unknown>)),
           quickNotes: (qn || []).map(r => mapQuickNote(r as Record<string, unknown>)),
           communicationTemplates: (ct || []).map(r => mapTemplate(r as Record<string, unknown>)),
           quickReplies: (qr || []).map(r => mapQuickReply(r as Record<string, unknown>)),
@@ -690,27 +652,6 @@ const useStore = create<AppState>()(
         if (error) console.error('[deleteKnowledgeEntry] DELETE failed:', error.message);
       },
 
-      // ── SOP Checklists ──
-      addSOPChecklist: async (checklistData) => {
-        const id = uuid();
-        const ownerId = await getOwnerId();
-        const newChecklist: SOPChecklist = { ...checklistData, id, ownerId };
-        set(s => ({ sopChecklists: [...s.sopChecklists, newChecklist] }));
-        const { error } = await supabase.from('sop_checklists').insert(sopToDb(newChecklist));
-        if (error) {
-          console.error('[addSOPChecklist] INSERT failed:', error.message, error.details, error.hint);
-          set(s => ({ sopChecklists: s.sopChecklists.filter(c => c.id !== id) }));
-          throw new Error(error.message);
-        }
-      },
-      updateSOPChecklist: async (id, updates) => {
-        set(s => ({
-          sopChecklists: s.sopChecklists.map(c => c.id === id ? { ...c, ...updates } : c),
-        }));
-        const { error } = await supabase.from('sop_checklists').update(sopToDb(updates)).eq('id', id);
-        if (error) console.error('[updateSOPChecklist] UPDATE failed:', error.message);
-      },
-
       // ── Quick Notes ──
       addQuickNote: async (noteData) => {
         const id = uuid();
@@ -817,19 +758,6 @@ const useStore = create<AppState>()(
       searchQuery: '',
       setSearchQuery: (query) => set({ searchQuery: query }),
 
-      activeChecklistProgress: {},
-      toggleChecklistProgress: (checklistId, itemId) => set(s => {
-        const progress = { ...s.activeChecklistProgress };
-        if (!progress[checklistId]) progress[checklistId] = {};
-        progress[checklistId] = { ...progress[checklistId], [itemId]: !progress[checklistId][itemId] };
-        return { activeChecklistProgress: progress };
-      }),
-      resetChecklistProgress: (checklistId) => set(s => {
-        const progress = { ...s.activeChecklistProgress };
-        delete progress[checklistId];
-        return { activeChecklistProgress: progress };
-      }),
-
       sidebarCollapsed: false,
       toggleSidebar: () => set(s => ({ sidebarCollapsed: !s.sidebarCollapsed })),
 
@@ -850,7 +778,6 @@ const useStore = create<AppState>()(
         sidebarCollapsed: state.sidebarCollapsed,
         darkMode: state.darkMode,
         language: state.language,
-        activeChecklistProgress: state.activeChecklistProgress,
       }),
     }
   )

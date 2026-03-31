@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, FileText, UserCog, CheckSquare,
-  BookOpen, ClipboardList, Calculator, MessageSquare, Zap, Sparkles, Target,
+  BookOpen, Calculator, MessageSquare, Zap, Sparkles, Target,
   ChevronLeft, ChevronRight, Briefcase, Shield, LogOut, Bug, X, KeyRound,
 } from 'lucide-react';
 import useStore from '../../stores/useStore';
@@ -94,7 +94,6 @@ function SidebarContent({ collapsed, onMobileClose }: { collapsed: boolean; onMo
 
   const refGroup: NavItem[] = [
     { to: '/knowledge', icon: BookOpen, label: t.nav.knowledgeBase },
-    { to: '/checklists', icon: ClipboardList, label: t.nav.checklists },
   ];
 
   const toolsGroup: NavItem[] = [

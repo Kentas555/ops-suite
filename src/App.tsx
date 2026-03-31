@@ -9,7 +9,6 @@ import Contracts from './pages/Contracts';
 import Accounts from './pages/Accounts';
 import Tasks from './pages/Tasks';
 import Knowledge from './pages/Knowledge';
-import Checklists from './pages/Checklists';
 import Tools from './pages/Tools';
 import Communications from './pages/Communications';
 import QuickReplies from './pages/QuickReplies';
@@ -91,7 +90,6 @@ export default function App() {
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/goals" element={<Goals />} />
               <Route path="/knowledge" element={<Knowledge />} />
-              <Route path="/checklists" element={<Checklists />} />
               <Route path="/tools" element={<Tools />} />
               <Route path="/communications" element={<Communications />} />
               <Route path="/replies" element={<QuickReplies />} />
