@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertTriangle, ChevronRight, Users, CheckCircle2, PhoneCall, ClipboardList, TrendingUp, Target, Zap, CalendarDays } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Users, CheckCircle2, PhoneCall, ClipboardList, TrendingUp, Target, Zap, CalendarDays, Circle } from 'lucide-react';
 import useStore from '../stores/useStore';
+import useToastStore from '../stores/useToastStore';
 import { formatDate, isOverdue, isDueToday } from '../utils/helpers';
 import PriorityBadge from '../components/ui/PriorityBadge';
 import { useTranslation } from '../i18n/useTranslation';
@@ -19,8 +20,9 @@ function fmtVal(v: number): string {
 }
 
 export default function Dashboard() {
-  const { clients, tasks, goals, communicationLogs } = useStore();
+  const { clients, tasks, goals, communicationLogs, updateTask } = useStore();
   const { t, lang } = useTranslation();
+  const toast = useToastStore();
   const navigate = useNavigate();
 
   const today = new Date().toLocaleDateString(lang === 'lt' ? 'lt-LT' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -112,7 +114,17 @@ export default function Dashboard() {
               return (
                 <div key={task.id} className="px-4 py-3 flex items-center gap-3 cursor-pointer border-b border-danger-100 dark:border-danger-900/30 last:border-b-0 hover:bg-danger-50/60 dark:hover:bg-danger-950/20 transition-colors"
                   onClick={() => navigate(`/tasks?open=${task.id}`)}>
-                  <div className={`w-1.5 h-8 rounded-full flex-shrink-0 ${isOD ? 'bg-danger-500' : 'bg-warning-400'}`} />
+                  <button
+                    className="flex-shrink-0 text-slate-300 hover:text-success-500 transition-colors"
+                    title={lang === 'lt' ? 'Pažymėti atlikta' : 'Mark complete'}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      await updateTask(task.id, { status: 'completed', completedAt: new Date().toISOString() });
+                      toast.success(t.toast.taskCompleted);
+                    }}
+                  >
+                    <Circle size={18} />
+                  </button>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{task.title}</div>
                     <div className="flex items-center gap-2 mt-0.5">

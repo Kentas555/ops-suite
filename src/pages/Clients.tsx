@@ -12,9 +12,10 @@ import { computeClientHealth, HEALTH_CONFIG } from '../utils/clientHealth';
 import type { Visibility } from '../types';
 
 export default function Clients() {
-  const { clients, tasks, addClient } = useStore();
+  const { clients, tasks, addClient, updateClient } = useStore();
   const { t, lang } = useTranslation();
   const toast = useToastStore();
+  const [editingAction, setEditingAction] = useState<{ id: string; value: string } | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -129,7 +130,11 @@ export default function Clients() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{client.responsiblePerson}</td>
-                  <td className="px-4 py-3 text-slate-500">{client.phone}</td>
+                  <td className="px-4 py-3">
+                    {client.phone ? (
+                      <a href={`tel:${client.phone}`} className="text-slate-500 hover:text-primary-600 hover:underline transition-colors">{client.phone}</a>
+                    ) : <span className="text-slate-300">—</span>}
+                  </td>
                   <td className="px-4 py-3"><StatusBadge status={client.status} /></td>
                   <td className="px-4 py-3">
                     {lastDays !== null && (
@@ -139,8 +144,33 @@ export default function Clients() {
                     )}
                   </td>
                   <td className="px-4 py-3 max-w-[200px]">
-                    {client.nextAction && (
-                      <span className="text-xs text-slate-600 truncate block">{client.nextAction}</span>
+                    {editingAction?.id === client.id ? (
+                      <input
+                        name="nextAction"
+                        className="input text-xs py-1"
+                        value={editingAction.value}
+                        onChange={(e) => setEditingAction({ ...editingAction, value: e.target.value })}
+                        onKeyDown={async (e) => {
+                          if (e.key === 'Enter') {
+                            await updateClient(client.id, { nextAction: editingAction.value || undefined });
+                            setEditingAction(null);
+                          }
+                          if (e.key === 'Escape') setEditingAction(null);
+                        }}
+                        onBlur={async () => {
+                          await updateClient(client.id, { nextAction: editingAction.value || undefined });
+                          setEditingAction(null);
+                        }}
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        className="text-xs text-slate-600 truncate block cursor-text hover:bg-slate-50 rounded px-1 -mx-1 py-0.5 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); setEditingAction({ id: client.id, value: client.nextAction || '' }); }}
+                        title={lang === 'lt' ? 'Spustelėkite redaguoti' : 'Click to edit'}
+                      >
+                        {client.nextAction || <span className="text-slate-300 italic">{lang === 'lt' ? 'Pridėti veiksmą...' : 'Add action...'}</span>}
+                      </span>
                     )}
                   </td>
                 </tr>
