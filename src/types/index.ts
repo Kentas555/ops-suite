@@ -176,6 +176,7 @@ export interface Goal extends VisibilityFields {
   period: GoalPeriod;
   status: GoalStatus;
   reflection: string;
+  targetDate?: string;
   userId: string;
   userName: string;
   createdAt: string;

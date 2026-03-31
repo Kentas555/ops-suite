@@ -293,6 +293,7 @@ function mapGoal(r: Record<string, unknown>): Goal {
     period: r.period as Goal['period'],
     status: r.status as Goal['status'],
     reflection: (r.reflection as string) || '',
+    targetDate: r.target_date as string | undefined,
     userId: r.user_id as string,
     userName: (r.user_name as string) || '',
     createdAt: r.created_at as string,
@@ -307,6 +308,7 @@ function goalToDb(g: Partial<Goal>): Record<string, unknown> {
   if (g.period !== undefined) d.period = g.period;
   if (g.status !== undefined) d.status = g.status;
   if (g.reflection !== undefined) d.reflection = g.reflection;
+  if (g.targetDate !== undefined) d.target_date = g.targetDate;
   if (g.userId !== undefined) d.user_id = g.userId;
   if (g.userName !== undefined) d.user_name = g.userName;
   if (g.updatedAt !== undefined) d.updated_at = g.updatedAt;
