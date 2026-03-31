@@ -99,8 +99,8 @@ BUSINESS BEHAVIOR:
 - Keep suggestions natural. Never sound like a salesperson.
 ${context ? `\nTEMPLATE TO ADAPT:\n${context}\n\nUse this template as a starting point but rewrite it naturally for this specific client message. Do not copy it word for word.` : ''}`;
 
-    // Try models in order: 2.0-flash first, then 1.5-flash as fallback
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    // Try models in priority order — broadest compatibility
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-pro'];
     let reply: string | undefined;
     let lastError = '';
 
