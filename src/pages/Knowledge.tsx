@@ -67,7 +67,7 @@ export default function Knowledge() {
   };
 
   const handleSave = async () => {
-    if (!formTitle.trim()) return;
+    if (!formTitle.trim()) { toast.error(lang === 'lt' ? 'Pavadinimas privalomas' : 'Title is required'); return; }
     // Single language per entry: content goes into the selected language slot
     const title: BilingualText = { lt: formLang === 'lt' ? formTitle : '', en: formLang === 'en' ? formTitle : '' };
     const content: BilingualText = { lt: formLang === 'lt' ? formContent : '', en: formLang === 'en' ? formContent : '' };

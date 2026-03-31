@@ -53,7 +53,7 @@ export default function Accounts() {
   const filtered = typeFilter === 'all' ? accountWorkflows : accountWorkflows.filter(w => w.type === typeFilter);
 
   const handleAdd = async () => {
-    if (!form.clientId) return;
+    if (!form.clientId) { toast.error(lang === 'lt' ? 'Pasirinkite klientą' : 'Please select a client'); return; }
     const client = clients.find(c => c.id === form.clientId);
     try {
       await addAccountWorkflow({

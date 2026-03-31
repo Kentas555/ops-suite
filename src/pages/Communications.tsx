@@ -13,7 +13,7 @@ export default function Communications() {
     addCommunicationTemplate, updateCommunicationTemplate, deleteCommunicationTemplate,
     addTask,
   } = useStore();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const toast = useToastStore();
 
   const [tab, setTab] = useState<'log' | 'templates'>('log');
@@ -64,7 +64,7 @@ export default function Communications() {
 
   // Create or update a communication log
   const handleSaveLog = async () => {
-    if (!logForm.subject) return;
+    if (!logForm.subject) { toast.error(lang === 'lt' ? 'Tema yra privaloma' : 'Subject is required'); return; }
     const client = clients.find(c => c.id === logForm.clientId);
 
     try {
@@ -145,7 +145,7 @@ export default function Communications() {
   };
 
   const handleSaveTpl = () => {
-    if (!tplForm.title) return;
+    if (!tplForm.title) { toast.error(lang === 'lt' ? 'Pavadinimas privalomas' : 'Title is required'); return; }
     const vars = [...(tplForm.body + ' ' + tplForm.subject).matchAll(/\{\{(\w+)\}\}/g)].map(m => m[1]);
     if (editTpl) {
       updateCommunicationTemplate(editTpl, { ...tplForm, variables: [...new Set(vars)] });

@@ -76,7 +76,7 @@ export default function Goals() {
   }, [goals, periodFilter, statusFilter]);
 
   const handleSave = async () => {
-    if (!form.title.trim()) return;
+    if (!form.title.trim()) { toast.error(lang === 'lt' ? 'Tikslo pavadinimas privalomas' : 'Goal title is required'); return; }
     try {
       const shared = {
         title: form.title, period: form.period, status: form.status,

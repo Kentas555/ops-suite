@@ -380,7 +380,7 @@ export default function Tasks() {
   }, [tasks, updateTask, toast, t]);
 
   const handleAdd = async () => {
-    if (!form.title.trim()) return;
+    if (!form.title.trim()) { toast.error(lang === 'lt' ? 'Pavadinimas privalomas' : 'Title is required'); return; }
     const client = clients.find(c => c.id === form.clientId);
     try {
       await addTask({

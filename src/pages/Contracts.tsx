@@ -12,7 +12,7 @@ import type { Visibility } from '../types';
 
 export default function Contracts() {
   const { contracts, clients, addContract, updateContract } = useStore();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const toast = useToastStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
@@ -36,7 +36,7 @@ export default function Contracts() {
   }), [contracts, statusFilter, search]);
 
   const handleAdd = async () => {
-    if (!form.clientId || !form.contractNumber) return;
+    if (!form.clientId || !form.contractNumber) { toast.error(lang === 'lt' ? 'Pasirinkite klientą ir įveskite sutarties numerį' : 'Client and contract number are required'); return; }
     const client = clients.find(c => c.id === form.clientId);
     try {
       await addContract({

@@ -48,19 +48,23 @@ export default function ClientDetail() {
     { key: 'internal_note' as const, label: t.crm.noteLabel },
   ];
 
-  const handleLogInteraction = () => {
+  const handleLogInteraction = async () => {
     if (!interactionNote.trim()) return;
-    addInteraction(client.id, {
-      clientId: client.id,
-      clientName: client.companyName,
-      type: interactionType,
-      subject: interactionNote.trim().slice(0, 60),
-      summary: interactionNote.trim(),
-      contactPerson: client.responsiblePerson,
-    });
-    setInteractionNote('');
-    interactionInputRef.current?.focus();
-    toast.success(t.toast.interactionLogged);
+    try {
+      await addInteraction(client.id, {
+        clientId: client.id,
+        clientName: client.companyName,
+        type: interactionType,
+        subject: interactionNote.trim().slice(0, 60),
+        summary: interactionNote.trim(),
+        contactPerson: client.responsiblePerson,
+      });
+      setInteractionNote('');
+      interactionInputRef.current?.focus();
+      toast.success(t.toast.interactionLogged);
+    } catch {
+      toast.error('Failed to log interaction');
+    }
   };
 
   const handleSaveNextAction = () => {

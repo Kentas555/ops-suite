@@ -47,7 +47,7 @@ export default function Clients() {
   }, [clients, statusFilter, search, sortBy]);
 
   const handleAdd = async () => {
-    if (!form.companyName.trim()) return;
+    if (!form.companyName.trim()) { toast.error(lang === 'lt' ? 'Įmonės pavadinimas privalomas' : 'Company name is required'); return; }
     try {
       await addClient({
         companyName: form.companyName,
