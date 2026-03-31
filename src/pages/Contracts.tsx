@@ -35,28 +35,32 @@ export default function Contracts() {
     return true;
   }), [contracts, statusFilter, search]);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.clientId || !form.contractNumber) return;
     const client = clients.find(c => c.id === form.clientId);
-    addContract({
-      clientId: form.clientId,
-      clientName: client?.companyName || '',
-      contractNumber: form.contractNumber,
-      type: form.type,
-      status: form.status,
-      startDate: form.startDate || undefined,
-      endDate: form.endDate || undefined,
-      value: form.value ? Number(form.value) : undefined,
-      currency: form.currency,
-      documents: [],
-      notes: form.notes,
-      missingItems: form.missingItems.split('\n').map(i => i.trim()).filter(Boolean),
-      visibility: form.visibility, sharedWith: form.sharedWith,
-    });
-    setShowAdd(false);
-    setSearchParams({});
-    setForm({ clientId: '', contractNumber: '', type: 'Service Agreement', status: 'draft', startDate: '', endDate: '', value: '', currency: 'EUR', notes: '', missingItems: '', visibility: 'team', sharedWith: [] });
-    toast.success(t.toast.contractCreated);
+    try {
+      await addContract({
+        clientId: form.clientId,
+        clientName: client?.companyName || '',
+        contractNumber: form.contractNumber,
+        type: form.type,
+        status: form.status,
+        startDate: form.startDate || undefined,
+        endDate: form.endDate || undefined,
+        value: form.value ? Number(form.value) : undefined,
+        currency: form.currency,
+        documents: [],
+        notes: form.notes,
+        missingItems: form.missingItems.split('\n').map(i => i.trim()).filter(Boolean),
+        visibility: form.visibility, sharedWith: form.sharedWith,
+      });
+      setShowAdd(false);
+      setSearchParams({});
+      setForm({ clientId: '', contractNumber: '', type: 'Service Agreement', status: 'draft', startDate: '', endDate: '', value: '', currency: 'EUR', notes: '', missingItems: '', visibility: 'team', sharedWith: [] });
+      toast.success(t.toast.contractCreated);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save');
+    }
   };
 
   return (

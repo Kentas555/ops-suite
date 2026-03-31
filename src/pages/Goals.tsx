@@ -89,27 +89,34 @@ export default function Goals() {
     setForm({ title: '', period: 'month', status: 'in_progress', reflection: '', visibility: 'team', sharedWith: [] });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim()) return;
     if (editId) {
       updateGoal(editId, { title: form.title, period: form.period, status: form.status, reflection: form.reflection });
       toast.success(t.toast.changesSaved);
+      setShowAdd(false);
+      setEditId(null);
+      resetForm();
     } else {
-      addGoal({
-        title: form.title,
-        period: form.period,
-        status: form.status,
-        reflection: form.reflection,
-        userId: currentUser?.id || '',
-        userName: currentUser?.displayName || '',
-        visibility: form.visibility,
-        sharedWith: form.sharedWith,
-      });
-      toast.success(t.toast.entryCreated);
+      try {
+        await addGoal({
+          title: form.title,
+          period: form.period,
+          status: form.status,
+          reflection: form.reflection,
+          userId: currentUser?.id || '',
+          userName: currentUser?.displayName || '',
+          visibility: form.visibility,
+          sharedWith: form.sharedWith,
+        });
+        toast.success(t.toast.entryCreated);
+        setShowAdd(false);
+        setEditId(null);
+        resetForm();
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to save');
+      }
     }
-    setShowAdd(false);
-    setEditId(null);
-    resetForm();
   };
 
   const startEdit = (g: typeof goals[0]) => {

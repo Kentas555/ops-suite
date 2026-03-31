@@ -45,25 +45,29 @@ export default function Clients() {
     return result;
   }, [clients, statusFilter, search, sortBy]);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.companyName.trim()) return;
-    addClient({
-      companyName: form.companyName,
-      phone: form.phone,
-      responsiblePerson: form.responsiblePerson,
-      responsiblePersonRole: form.responsiblePersonRole || undefined,
-      status: form.status,
-      accountStatus: 'pending_creation',
-      contractStatus: 'draft',
-      onboardingStage: 'initial_contact',
-      nextFollowUp: undefined,
-      visibility: form.visibility,
-      sharedWith: form.sharedWith,
-    });
-    setShowAdd(false);
-    setSearchParams({});
-    setForm({ companyName: '', phone: '', responsiblePerson: '', responsiblePersonRole: '', status: 'prospect', visibility: 'team', sharedWith: [] });
-    toast.success(t.toast.clientCreated);
+    try {
+      await addClient({
+        companyName: form.companyName,
+        phone: form.phone,
+        responsiblePerson: form.responsiblePerson,
+        responsiblePersonRole: form.responsiblePersonRole || undefined,
+        status: form.status,
+        accountStatus: 'pending_creation',
+        contractStatus: 'draft',
+        onboardingStage: 'initial_contact',
+        nextFollowUp: undefined,
+        visibility: form.visibility,
+        sharedWith: form.sharedWith,
+      });
+      setShowAdd(false);
+      setSearchParams({});
+      setForm({ companyName: '', phone: '', responsiblePerson: '', responsiblePersonRole: '', status: 'prospect', visibility: 'team', sharedWith: [] });
+      toast.success(t.toast.clientCreated);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save client');
+    }
   };
 
   return (

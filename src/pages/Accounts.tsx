@@ -52,27 +52,31 @@ export default function Accounts() {
 
   const filtered = typeFilter === 'all' ? accountWorkflows : accountWorkflows.filter(w => w.type === typeFilter);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.clientId) return;
     const client = clients.find(c => c.id === form.clientId);
-    addAccountWorkflow({
-      clientId: form.clientId,
-      clientName: client?.companyName || '',
-      type: form.type,
-      status: 'in_progress',
-      steps: defaultSteps[form.type].map((s, i) => ({
-        id: generateId(),
-        title: s.title,
-        description: s.description,
-        status: i === 0 ? 'in_progress' : 'pending',
-      })),
-      notes: form.notes,
-      visibility: form.visibility,
-      sharedWith: form.sharedWith,
-    });
-    setShowAdd(false);
-    setForm({ type: 'create', clientId: '', notes: '', visibility: 'team', sharedWith: [] });
-    toast.success(t.toast.workflowCreated);
+    try {
+      await addAccountWorkflow({
+        clientId: form.clientId,
+        clientName: client?.companyName || '',
+        type: form.type,
+        status: 'in_progress',
+        steps: defaultSteps[form.type].map((s, i) => ({
+          id: generateId(),
+          title: s.title,
+          description: s.description,
+          status: i === 0 ? 'in_progress' : 'pending',
+        })),
+        notes: form.notes,
+        visibility: form.visibility,
+        sharedWith: form.sharedWith,
+      });
+      setShowAdd(false);
+      setForm({ type: 'create', clientId: '', notes: '', visibility: 'team', sharedWith: [] });
+      toast.success(t.toast.workflowCreated);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save');
+    }
   };
 
   const stepIcon = (status: string) => {

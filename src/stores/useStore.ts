@@ -501,16 +501,31 @@ const useStore = create<AppState>()(
         const ownerId = await getOwnerId();
         const newClient: Client = { ...clientData, id, createdAt: n, updatedAt: n, ownerId };
         set(s => ({ clients: [...s.clients, newClient] }));
-        await supabase.from('clients').insert(clientToDb(newClient));
+        const { error } = await supabase.from('clients').insert(clientToDb(newClient));
+        if (error) {
+          console.error('[addClient] INSERT failed:', error.message, error.details, error.hint);
+          set(s => ({ clients: s.clients.filter(c => c.id !== id) })); // rollback
+          throw new Error(error.message);
+        }
       },
       updateClient: async (id, updates) => {
         const n = now();
+        const prev = get().clients.find(c => c.id === id);
         set(s => ({ clients: s.clients.map(c => c.id === id ? { ...c, ...updates, updatedAt: n } : c) }));
-        await supabase.from('clients').update({ ...clientToDb(updates), updated_at: n }).eq('id', id);
+        const { error } = await supabase.from('clients').update({ ...clientToDb(updates), updated_at: n }).eq('id', id);
+        if (error) {
+          console.error('[updateClient] UPDATE failed:', error.message);
+          if (prev) set(s => ({ clients: s.clients.map(c => c.id === id ? prev : c) }));
+        }
       },
       deleteClient: async (id) => {
+        const prev = get().clients.find(c => c.id === id);
         set(s => ({ clients: s.clients.filter(c => c.id !== id) }));
-        await supabase.from('clients').delete().eq('id', id);
+        const { error } = await supabase.from('clients').delete().eq('id', id);
+        if (error) {
+          console.error('[deleteClient] DELETE failed:', error.message);
+          if (prev) set(s => ({ clients: [...s.clients, prev] }));
+        }
       },
 
       // ── Tasks ──
@@ -519,15 +534,22 @@ const useStore = create<AppState>()(
         const ownerId = await getOwnerId();
         const newTask: Task = { ...taskData, id, createdAt: now(), ownerId };
         set(s => ({ tasks: [...s.tasks, newTask] }));
-        await supabase.from('tasks').insert(taskToDb(newTask));
+        const { error } = await supabase.from('tasks').insert(taskToDb(newTask));
+        if (error) {
+          console.error('[addTask] INSERT failed:', error.message, error.details, error.hint);
+          set(s => ({ tasks: s.tasks.filter(t => t.id !== id) }));
+          throw new Error(error.message);
+        }
       },
       updateTask: async (id, updates) => {
         set(s => ({ tasks: s.tasks.map(t => t.id === id ? { ...t, ...updates } : t) }));
-        await supabase.from('tasks').update(taskToDb(updates)).eq('id', id);
+        const { error } = await supabase.from('tasks').update(taskToDb(updates)).eq('id', id);
+        if (error) console.error('[updateTask] UPDATE failed:', error.message);
       },
       deleteTask: async (id) => {
         set(s => ({ tasks: s.tasks.filter(t => t.id !== id) }));
-        await supabase.from('tasks').delete().eq('id', id);
+        const { error } = await supabase.from('tasks').delete().eq('id', id);
+        if (error) console.error('[deleteTask] DELETE failed:', error.message);
       },
       toggleTaskChecklistItem: async (taskId, itemId) => {
         const task = get().tasks.find(t => t.id === taskId);
@@ -548,7 +570,12 @@ const useStore = create<AppState>()(
         const ownerId = await getOwnerId();
         const newContract: Contract = { ...contractData, id, createdAt: n, updatedAt: n, ownerId };
         set(s => ({ contracts: [...s.contracts, newContract] }));
-        await supabase.from('contracts').insert(contractToDb(newContract));
+        const { error } = await supabase.from('contracts').insert(contractToDb(newContract));
+        if (error) {
+          console.error('[addContract] INSERT failed:', error.message, error.details, error.hint);
+          set(s => ({ contracts: s.contracts.filter(c => c.id !== id) }));
+          throw new Error(error.message);
+        }
       },
       updateContract: async (id, updates) => {
         const n = now();
@@ -566,7 +593,12 @@ const useStore = create<AppState>()(
         const ownerId = await getOwnerId();
         const newWorkflow: AccountWorkflow = { ...workflowData, id, createdAt: now(), ownerId };
         set(s => ({ accountWorkflows: [...s.accountWorkflows, newWorkflow] }));
-        await supabase.from('account_workflows').insert(workflowToDb(newWorkflow));
+        const { error } = await supabase.from('account_workflows').insert(workflowToDb(newWorkflow));
+        if (error) {
+          console.error('[addAccountWorkflow] INSERT failed:', error.message, error.details, error.hint);
+          set(s => ({ accountWorkflows: s.accountWorkflows.filter(w => w.id !== id) }));
+          throw new Error(error.message);
+        }
       },
       updateAccountWorkflow: async (id, updates) => {
         set(s => ({
@@ -618,7 +650,12 @@ const useStore = create<AppState>()(
         const ownerId = await getOwnerId();
         const newEntry: KnowledgeEntry = { ...entryData, id, createdAt: n, updatedAt: n, ownerId };
         set(s => ({ knowledgeEntries: [...s.knowledgeEntries, newEntry] }));
-        await supabase.from('knowledge_entries').insert(knowledgeToDb(newEntry));
+        const { error } = await supabase.from('knowledge_entries').insert(knowledgeToDb(newEntry));
+        if (error) {
+          console.error('[addKnowledgeEntry] INSERT failed:', error.message, error.details, error.hint);
+          set(s => ({ knowledgeEntries: s.knowledgeEntries.filter(e => e.id !== id) }));
+          throw new Error(error.message);
+        }
       },
       updateKnowledgeEntry: async (id, updates) => {
         const n = now();
@@ -638,7 +675,12 @@ const useStore = create<AppState>()(
         const ownerId = await getOwnerId();
         const newChecklist: SOPChecklist = { ...checklistData, id, ownerId };
         set(s => ({ sopChecklists: [...s.sopChecklists, newChecklist] }));
-        await supabase.from('sop_checklists').insert(sopToDb(newChecklist));
+        const { error } = await supabase.from('sop_checklists').insert(sopToDb(newChecklist));
+        if (error) {
+          console.error('[addSOPChecklist] INSERT failed:', error.message, error.details, error.hint);
+          set(s => ({ sopChecklists: s.sopChecklists.filter(c => c.id !== id) }));
+          throw new Error(error.message);
+        }
       },
       updateSOPChecklist: async (id, updates) => {
         set(s => ({
@@ -720,7 +762,12 @@ const useStore = create<AppState>()(
         const ownerId = await getOwnerId();
         const newGoal: Goal = { ...goalData, id, createdAt: n, updatedAt: n, ownerId };
         set(s => ({ goals: [...s.goals, newGoal] }));
-        await supabase.from('goals').insert(goalToDb(newGoal));
+        const { error } = await supabase.from('goals').insert(goalToDb(newGoal));
+        if (error) {
+          console.error('[addGoal] INSERT failed:', error.message, error.details, error.hint);
+          set(s => ({ goals: s.goals.filter(g => g.id !== id) }));
+          throw new Error(error.message);
+        }
       },
       updateGoal: async (id, updates) => {
         const n = now();

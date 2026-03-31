@@ -36,21 +36,25 @@ export default function Checklists() {
   const progress = running ? (activeChecklistProgress[running.id] || {}) : {};
   const completedCount = running ? running.items.filter(i => progress[i.id]).length : 0;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.title.trim()) return;
-    addSOPChecklist({
-      title: form.title, description: form.description, category: form.category,
-      estimatedTime: form.estimatedTime || undefined,
-      items: form.items.filter(i => i.text.trim()).map((item, i) => ({
-        id: generateId(), text: item.text, helpText: item.helpText || undefined,
-        isRequired: item.isRequired, order: i + 1,
-      })),
-      lastUsed: undefined, usageCount: 0,
-      visibility: form.visibility, sharedWith: form.sharedWith,
-    });
-    setShowAdd(false);
-    setForm({ title: '', description: '', category: 'Onboarding', estimatedTime: '', items: [{ text: '', helpText: '', isRequired: true }], visibility: 'team', sharedWith: [] });
-    toast.success(t.toast.checklistCreated);
+    try {
+      await addSOPChecklist({
+        title: form.title, description: form.description, category: form.category,
+        estimatedTime: form.estimatedTime || undefined,
+        items: form.items.filter(i => i.text.trim()).map((item, i) => ({
+          id: generateId(), text: item.text, helpText: item.helpText || undefined,
+          isRequired: item.isRequired, order: i + 1,
+        })),
+        lastUsed: undefined, usageCount: 0,
+        visibility: form.visibility, sharedWith: form.sharedWith,
+      });
+      setShowAdd(false);
+      setForm({ title: '', description: '', category: 'Onboarding', estimatedTime: '', items: [{ text: '', helpText: '', isRequired: true }], visibility: 'team', sharedWith: [] });
+      toast.success(t.toast.checklistCreated);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save');
+    }
   };
 
   return (

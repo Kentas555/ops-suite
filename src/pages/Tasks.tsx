@@ -147,21 +147,25 @@ export default function Tasks() {
     setDragOverColumn(null);
   }, [tasks, updateTask, toast, t]);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.title.trim()) return;
     const client = clients.find(c => c.id === form.clientId);
-    addTask({
-      title: form.title, description: form.description, priority: form.priority, status: form.status,
-      clientId: form.clientId || undefined, clientName: client?.companyName,
-      category: form.category, dueDate: form.dueDate || undefined, dueTime: form.dueTime || undefined,
-      isRecurring: form.isRecurring, recurringInterval: form.recurringInterval || undefined, notes: form.notes,
-      checklistItems: form.checklistItems ? form.checklistItems.split('\n').filter(Boolean).map(text => ({ id: generateId(), text: text.trim(), completed: false })) : undefined,
-      visibility: form.visibility, sharedWith: form.sharedWith,
-    });
-    setShowAdd(false);
-    setSearchParams({});
-    setForm({ title: '', description: '', priority: 'medium', status: 'todo', clientId: '', category: 'follow-up', dueDate: '', dueTime: '', isRecurring: false, recurringInterval: '', notes: '', checklistItems: '', visibility: 'team', sharedWith: [] });
-    toast.success(t.toast.taskCreated);
+    try {
+      await addTask({
+        title: form.title, description: form.description, priority: form.priority, status: form.status,
+        clientId: form.clientId || undefined, clientName: client?.companyName,
+        category: form.category, dueDate: form.dueDate || undefined, dueTime: form.dueTime || undefined,
+        isRecurring: form.isRecurring, recurringInterval: form.recurringInterval || undefined, notes: form.notes,
+        checklistItems: form.checklistItems ? form.checklistItems.split('\n').filter(Boolean).map(text => ({ id: generateId(), text: text.trim(), completed: false })) : undefined,
+        visibility: form.visibility, sharedWith: form.sharedWith,
+      });
+      setShowAdd(false);
+      setSearchParams({});
+      setForm({ title: '', description: '', priority: 'medium', status: 'todo', clientId: '', category: 'follow-up', dueDate: '', dueTime: '', isRecurring: false, recurringInterval: '', notes: '', checklistItems: '', visibility: 'team', sharedWith: [] });
+      toast.success(t.toast.taskCreated);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save');
+    }
   };
 
   return (

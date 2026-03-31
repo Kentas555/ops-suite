@@ -67,7 +67,7 @@ export default function Knowledge() {
     setFormVisibility('team'); setFormSharedWith([]);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formTitle.trim()) return;
     // Single language per entry: content goes into the selected language slot
     const title: BilingualText = { lt: formLang === 'lt' ? formTitle : '', en: formLang === 'en' ? formTitle : '' };
@@ -76,12 +76,19 @@ export default function Knowledge() {
     if (editEntry) {
       updateKnowledgeEntry(editEntry, { title, content, category: formCategory, tags, isPinned: formPinned });
       setEditEntry(null);
+      setShowAdd(false);
+      resetForm();
+      toast.success(t.toast.entryUpdated);
     } else {
-      addKnowledgeEntry({ title, content, category: formCategory, tags, isPinned: formPinned, visibility: formVisibility, sharedWith: formSharedWith });
+      try {
+        await addKnowledgeEntry({ title, content, category: formCategory, tags, isPinned: formPinned, visibility: formVisibility, sharedWith: formSharedWith });
+        setShowAdd(false);
+        resetForm();
+        toast.success(t.toast.entryCreated);
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to save');
+      }
     }
-    setShowAdd(false);
-    resetForm();
-    toast.success(editEntry ? t.toast.entryUpdated : t.toast.entryCreated);
   };
 
   const startEdit = (e: typeof knowledgeEntries[0]) => {
