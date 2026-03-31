@@ -61,10 +61,11 @@ export default function Header({ onMobileMenuClick }: { onMobileMenuClick?: () =
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); inputRef.current?.focus(); }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') { e.preventDefault(); navigate('/tasks?action=new'); }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, []);
+  }, [navigate]);
 
   const q = searchQuery.toLowerCase();
   const filteredClients = q ? clients.filter(c =>

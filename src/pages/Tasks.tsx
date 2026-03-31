@@ -651,7 +651,7 @@ export default function Tasks() {
       />
 
       {/* Add Task Modal */}
-      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setSearchParams({}); }} title={t.tasks.newTask} size="lg"
+      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setSearchParams({}); }} title={t.tasks.newTask} size="lg" onSubmit={handleAdd}
         footer={<><button className="btn-secondary" onClick={() => { setShowAdd(false); setSearchParams({}); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleAdd}>{t.tasks.createTask}</button></>}
       >
         <div className="space-y-4">

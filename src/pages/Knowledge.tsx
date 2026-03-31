@@ -198,7 +198,7 @@ export default function Knowledge() {
       </Modal>
 
       {/* Add/Edit Modal — Single language per entry */}
-      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setEditEntry(null); }} title={editEntry ? t.knowledge.editEntry : t.knowledge.newEntry} size="lg"
+      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setEditEntry(null); }} title={editEntry ? t.knowledge.editEntry : t.knowledge.newEntry} size="lg" onSubmit={handleSave}
         footer={<><button className="btn-secondary" onClick={() => { setShowAdd(false); setEditEntry(null); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleSave}>{t.common.save}</button></>}
       >
         <div className="space-y-4">

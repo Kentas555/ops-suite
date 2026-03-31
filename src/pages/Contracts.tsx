@@ -177,7 +177,7 @@ export default function Contracts() {
       </div>
 
       {/* Add Contract Modal */}
-      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setSearchParams({}); }} title={t.contracts.newContract} size="lg"
+      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setSearchParams({}); }} title={t.contracts.newContract} size="lg" onSubmit={handleAdd}
         footer={<><button className="btn-secondary" onClick={() => { setShowAdd(false); setSearchParams({}); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleAdd}>{t.contracts.createContract}</button></>}
       >
         <div className="space-y-4">

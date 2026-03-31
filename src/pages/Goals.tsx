@@ -277,7 +277,7 @@ export default function Goals() {
       )}
 
       {/* Create / Edit Modal */}
-      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setEditId(null); }} title={editId ? t.goals.editGoal : t.goals.newGoal} size="lg"
+      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setEditId(null); }} title={editId ? t.goals.editGoal : t.goals.newGoal} size="lg" onSubmit={handleSave}
         footer={<><button className="btn-secondary" onClick={() => { setShowAdd(false); setEditId(null); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleSave} disabled={!form.title.trim()}>{t.common.save}</button></>}
       >
         <div className="space-y-4">

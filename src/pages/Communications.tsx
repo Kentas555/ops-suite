@@ -235,7 +235,7 @@ export default function Communications() {
           </div>
 
           {/* Add / Edit Log Modal */}
-          <Modal isOpen={showAddLog} onClose={() => { setShowAddLog(false); setEditLogId(null); }} title={editLogId ? 'Edit Activity' : t.comms.logCommunication}
+          <Modal isOpen={showAddLog} onClose={() => { setShowAddLog(false); setEditLogId(null); }} title={editLogId ? 'Edit Activity' : t.comms.logCommunication} onSubmit={handleSaveLog}
             footer={<><button className="btn-secondary" onClick={() => { setShowAddLog(false); setEditLogId(null); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleSaveLog}>{t.common.save}</button></>}
           >
             <div className="space-y-3">

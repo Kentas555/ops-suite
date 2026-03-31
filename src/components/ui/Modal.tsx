@@ -4,13 +4,14 @@ import { X } from 'lucide-react';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSubmit?: () => void; // Cmd+Enter triggers this
   title: string;
   children: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   footer?: ReactNode;
 }
 
-export default function Modal({ isOpen, onClose, title, children, size = 'md', footer }: ModalProps) {
+export default function Modal({ isOpen, onClose, onSubmit, title, children, size = 'md', footer }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,12 +24,16 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
   }, [isOpen]);
 
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
+    const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && onSubmit) {
+        e.preventDefault();
+        onSubmit();
+      }
     };
-    if (isOpen) window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
+    if (isOpen) window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isOpen, onClose, onSubmit]);
 
   if (!isOpen) return null;
 
@@ -54,7 +59,12 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', f
         </div>
         <div className="px-4 sm:px-6 py-4 overflow-y-auto flex-1 min-h-0">{children}</div>
         {footer && (
-          <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-200 flex flex-wrap justify-end gap-2 sm:gap-3 flex-shrink-0">{footer}</div>
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-200 flex flex-wrap justify-end gap-2 sm:gap-3 flex-shrink-0">
+            {footer}
+            {onSubmit && (
+              <span className="hidden sm:inline text-[10px] text-slate-300 self-center ml-1">⌘↵</span>
+            )}
+          </div>
         )}
       </div>
     </div>

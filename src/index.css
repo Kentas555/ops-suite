@@ -91,7 +91,7 @@
   .card {
     background: var(--surface-0);
     border: 1px solid var(--border-default);
-    @apply rounded-lg shadow-xs;
+    @apply rounded-lg shadow-xs transition-shadow duration-150;
   }
 
   .card-hover {
@@ -103,12 +103,12 @@
 
   /* ─── Buttons ─── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 active:bg-primary-800 transition-colors duration-150 cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 active:scale-[0.97] transition-all duration-100 cursor-pointer disabled:opacity-50 disabled:pointer-events-none;
   }
   .dark .btn-primary { @apply bg-primary-500 hover:bg-primary-400; }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md border transition-colors duration-150 cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md border active:scale-[0.97] transition-all duration-100 cursor-pointer disabled:opacity-50 disabled:pointer-events-none;
     background: var(--surface-0);
     color: var(--text-secondary);
     border-color: var(--border-default);
@@ -116,13 +116,13 @@
   .btn-secondary:hover { background: var(--surface-1); }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md active:scale-[0.97] transition-all duration-100 cursor-pointer disabled:opacity-50 disabled:pointer-events-none;
     color: var(--text-secondary);
   }
   .btn-ghost:hover { background: var(--surface-2); }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-danger-600 text-white text-sm font-medium rounded-md hover:bg-danger-700 active:bg-danger-700 transition-colors duration-150 cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-danger-600 text-white text-sm font-medium rounded-md hover:bg-danger-700 active:scale-[0.97] transition-all duration-100 cursor-pointer disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .btn-sm {

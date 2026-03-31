@@ -154,7 +154,7 @@ export default function Clients() {
       </div>
 
       {/* Add Client Modal */}
-      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setSearchParams({}); }} title={t.clients.addNewClient}
+      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setSearchParams({}); }} title={t.clients.addNewClient} onSubmit={handleAdd}
         footer={<><button className="btn-secondary" onClick={() => { setShowAdd(false); setSearchParams({}); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleAdd}>{t.clients.addClient}</button></>}
       >
         <div className="space-y-4">
