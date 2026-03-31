@@ -102,7 +102,7 @@ export default function Clients() {
       </div>
 
       {/* Client Table */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-100 text-left text-xs text-slate-400 font-medium">
@@ -166,7 +166,7 @@ export default function Clients() {
             <label className="label">{t.clients.phone} *</label>
             <input name="phone" className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+370..." />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label">{t.clients.responsiblePerson} *</label>
               <input name="responsiblePerson" className="input" value={form.responsiblePerson} onChange={(e) => setForm({ ...form, responsiblePerson: e.target.value })} />

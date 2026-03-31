@@ -34,7 +34,7 @@ export default function Layout() {
   }, [pathname]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-dvh overflow-hidden">
       {mobileNavOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-30 md:hidden"

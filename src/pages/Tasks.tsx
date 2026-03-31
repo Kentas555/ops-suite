@@ -445,7 +445,7 @@ export default function Tasks() {
 
       {/* Kanban View */}
       {view === 'kanban' && (
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {statusColumns.map(col => {
             const colTasks = filtered.filter(fk => fk.status === col.key);
             const isDropTarget = dragOverColumn === col.key && draggedTaskId !== null;
@@ -595,7 +595,7 @@ export default function Tasks() {
 
       {/* List View */}
       {view === 'list' && (
-        <div className="card overflow-hidden">
+        <div className="card overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
@@ -657,7 +657,7 @@ export default function Tasks() {
         <div className="space-y-4">
           <div><label className="label">{t.common.title} *</label><input name="title" className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
           <div><label className="label">{t.common.description}</label><textarea name="description" className="textarea" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div><label className="label">{t.common.priority}</label><select name="priority" className="select" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}><option value="urgent">{t.tasks.urgent}</option><option value="high">{t.tasks.high}</option><option value="medium">{t.tasks.medium}</option><option value="low">{t.tasks.low}</option></select></div>
             <div><label className="label">{t.common.category}</label><select name="category" className="select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}><option value="follow-up">{t.tasks.followUp}</option><option value="contract">{t.tasks.contract}</option><option value="account">{t.tasks.account}</option><option value="document">{t.tasks.document}</option><option value="communication">{t.tasks.communication}</option><option value="onboarding">{t.tasks.onboarding}</option><option value="other">{t.tasks.other}</option></select></div>
             <div><label className="label">{t.tasks.dueDate}</label><input name="dueDate" className="input" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} /></div>

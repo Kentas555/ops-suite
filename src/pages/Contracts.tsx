@@ -87,7 +87,7 @@ export default function Contracts() {
       </div>
 
       {/* Contracts Table */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-slate-200">
@@ -123,7 +123,7 @@ export default function Contracts() {
                 {expanded === contract.id && (
                   <tr key={`${contract.id}-detail`}>
                     <td colSpan={8} className="px-6 py-4 border-t border-slate-100">
-                      <div className="grid grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                           <h4 className="text-xs font-semibold text-slate-700 mb-2 uppercase">{t.common.details}</h4>
                           <div className="space-y-1 text-sm">
@@ -181,7 +181,7 @@ export default function Contracts() {
         footer={<><button className="btn-secondary" onClick={() => { setShowAdd(false); setSearchParams({}); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleAdd}>{t.contracts.createContract}</button></>}
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label className="label">{t.common.client} *</label>
               <select name="clientId" className="select" value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
                 <option value="">{t.contracts.selectClient}</option>
@@ -190,7 +190,7 @@ export default function Contracts() {
             </div>
             <div><label className="label">{t.contracts.contractNum} *</label><input name="contractNumber" className="input" value={form.contractNumber} onChange={(e) => setForm({ ...form, contractNumber: e.target.value })} placeholder="SVC-2024-XXX" /></div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label className="label">{t.common.type}</label><input name="type" className="input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} /></div>
             <div><label className="label">{t.common.status}</label>
               <select name="status" className="select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
@@ -198,7 +198,7 @@ export default function Contracts() {
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div><label className="label">{t.contracts.startDate}</label><input name="startDate" className="input" type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
             <div><label className="label">{t.contracts.endDate}</label><input name="endDate" className="input" type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
             <div><label className="label">{t.contracts.valueEur}</label><input name="value" className="input" type="number" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} /></div>

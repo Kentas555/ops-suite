@@ -207,14 +207,14 @@ export default function Communications() {
                           <span className="text-xs text-slate-400">{log.createdAt.split('T')[1]?.slice(0, 5) || ''}</span>
                           <button
                             onClick={() => startEditLog(log)}
-                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"
+                            className="opacity-60 md:opacity-0 md:group-hover:opacity-100 p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"
                             title="Edit"
                           >
                             <Edit2 size={13} />
                           </button>
                           <button
                             onClick={() => setDeleteLogId(log.id)}
-                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-slate-400 hover:text-danger-500 transition-all"
+                            className="opacity-60 md:opacity-0 md:group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-slate-400 hover:text-danger-500 transition-all"
                             title="Delete"
                           >
                             <Trash2 size={13} />
@@ -239,7 +239,7 @@ export default function Communications() {
             footer={<><button className="btn-secondary" onClick={() => { setShowAddLog(false); setEditLogId(null); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleSaveLog}>{t.common.save}</button></>}
           >
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><label className="label">{t.common.type}</label><select name="type" className="select" value={logForm.type} onChange={(e) => setLogForm({ ...logForm, type: e.target.value })}><option value="email">{t.comms.email}</option><option value="phone">{t.comms.phone}</option><option value="meeting">{t.comms.meeting}</option><option value="internal_note">{t.comms.internalNote}</option></select></div>
                 <div><label className="label">{t.common.client}</label><select name="clientId" className="select" value={logForm.clientId} onChange={(e) => setLogForm({ ...logForm, clientId: e.target.value })}><option value="">{t.common.select}</option>{clients.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}</select></div>
               </div>
@@ -361,7 +361,7 @@ export default function Communications() {
             </>}
           >
             {activeTpl && (
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">{t.common.fillVariables}</h4>
                   <div className="space-y-3">
@@ -393,7 +393,7 @@ export default function Communications() {
             footer={<><button className="btn-secondary" onClick={() => { setShowAddTpl(false); setEditTpl(null); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleSaveTpl}>{t.common.save}</button></>}
           >
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><label className="label">{t.common.title} *</label><input name="title" className="input" value={tplForm.title} onChange={(e) => setTplForm({ ...tplForm, title: e.target.value })} /></div>
                 <div><label className="label">{t.common.category}</label>
                   <select name="category" className="select" value={tplForm.category} onChange={(e) => setTplForm({ ...tplForm, category: e.target.value })}>

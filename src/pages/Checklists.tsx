@@ -87,7 +87,7 @@ export default function Checklists() {
 
       {/* Checklist Table */}
       {filtered.length > 0 ? (
-        <div className="card overflow-hidden">
+        <div className="card overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
@@ -215,7 +215,7 @@ export default function Checklists() {
         <div className="space-y-4">
           <div><label className="label">{t.common.title} *</label><input name="title" className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
           <div><label className="label">{t.common.description}</label><textarea name="description" className="textarea" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label className="label">{t.common.category}</label>
               <select name="category" className="select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                 {categoryOptions.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}

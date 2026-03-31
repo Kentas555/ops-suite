@@ -319,7 +319,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
       <aside
         className={`
           fixed inset-y-0 left-0 z-40 md:hidden
-          w-64 h-screen flex flex-col
+          w-64 h-dvh flex flex-col
           transition-transform duration-200
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
@@ -330,7 +330,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
 
       {/* Desktop sidebar — static, collapsible */}
       <aside
-        className={`hidden md:flex ${sidebarCollapsed ? 'w-[68px]' : 'w-60'} h-screen flex-col transition-all duration-200 flex-shrink-0`}
+        className={`hidden md:flex ${sidebarCollapsed ? 'w-[68px]' : 'w-60'} h-dvh flex-col transition-all duration-200 flex-shrink-0`}
         style={{ background: 'var(--surface-0)', borderRight: '1px solid var(--border-default)' }}
       >
         <SidebarContent collapsed={sidebarCollapsed} />

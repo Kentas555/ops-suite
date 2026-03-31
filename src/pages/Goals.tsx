@@ -255,7 +255,7 @@ export default function Goals() {
             <input name="title" className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} autoFocus />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label">{t.goals.period}</label>
               <select name="period" className="select" value={form.period} onChange={(e) => setForm({ ...form, period: e.target.value as GoalPeriod })}>
