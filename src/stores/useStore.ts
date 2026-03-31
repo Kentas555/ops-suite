@@ -385,6 +385,8 @@ interface AppState {
 
   // Communication Logs
   addCommunicationLog: (log: Omit<CommunicationLog, 'id' | 'createdAt'>) => Promise<void>;
+  updateCommunicationLog: (id: string, updates: Partial<CommunicationLog>) => Promise<void>;
+  deleteCommunicationLog: (id: string) => Promise<void>;
   addInteraction: (clientId: string, log: Omit<CommunicationLog, 'id' | 'createdAt'>) => Promise<void>;
 
   // Knowledge
@@ -625,7 +627,24 @@ const useStore = create<AppState>()(
         const id = uuid();
         const newLog: CommunicationLog = { ...logData, id, createdAt: now() };
         set(s => ({ communicationLogs: [...s.communicationLogs, newLog] }));
-        await supabase.from('communication_logs').insert(commLogToDb(newLog));
+        const { error } = await supabase.from('communication_logs').insert(commLogToDb(newLog));
+        if (error) {
+          console.error('[addCommunicationLog] INSERT failed:', error.message);
+          set(s => ({ communicationLogs: s.communicationLogs.filter(l => l.id !== id) }));
+          throw new Error(error.message);
+        }
+      },
+      updateCommunicationLog: async (id, updates) => {
+        set(s => ({
+          communicationLogs: s.communicationLogs.map(l => l.id === id ? { ...l, ...updates } : l),
+        }));
+        const { error } = await supabase.from('communication_logs').update(commLogToDb(updates)).eq('id', id);
+        if (error) console.error('[updateCommunicationLog] UPDATE failed:', error.message);
+      },
+      deleteCommunicationLog: async (id) => {
+        set(s => ({ communicationLogs: s.communicationLogs.filter(l => l.id !== id) }));
+        const { error } = await supabase.from('communication_logs').delete().eq('id', id);
+        if (error) console.error('[deleteCommunicationLog] DELETE failed:', error.message);
       },
       addInteraction: async (clientId, logData) => {
         const id = uuid();

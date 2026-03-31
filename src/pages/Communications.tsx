@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Copy, Edit2, Trash2, Check } from 'lucide-react';
+import { Plus, Search, Copy, Edit2, Trash2, Check, CalendarDays, ArrowRight } from 'lucide-react';
 import useStore from '../stores/useStore';
 import { formatDate } from '../utils/helpers';
 import Modal from '../components/ui/Modal';
@@ -9,7 +9,9 @@ import useToastStore from '../stores/useToastStore';
 export default function Communications() {
   const {
     communicationLogs, communicationTemplates, clients,
-    addCommunicationLog, addCommunicationTemplate, updateCommunicationTemplate, deleteCommunicationTemplate,
+    addCommunicationLog, updateCommunicationLog, deleteCommunicationLog,
+    addCommunicationTemplate, updateCommunicationTemplate, deleteCommunicationTemplate,
+    addTask,
   } = useStore();
   const { t } = useTranslation();
   const toast = useToastStore();
@@ -25,7 +27,12 @@ export default function Communications() {
   const [editTpl, setEditTpl] = useState<string | null>(null);
   const [tplVars, setTplVars] = useState<Record<string, string>>({});
 
-  const [logForm, setLogForm] = useState({ type: 'email' as any, clientId: '', contactPerson: '', subject: '', summary: '', nextAction: '' });
+  // Edit/delete state for activity entries
+  const [editLogId, setEditLogId] = useState<string | null>(null);
+  const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
+
+  const emptyLogForm = { type: 'email' as any, clientId: '', contactPerson: '', subject: '', summary: '', nextAction: '', nextActionDate: '' };
+  const [logForm, setLogForm] = useState(emptyLogForm);
   const [tplForm, setTplForm] = useState({ title: '', category: 'Welcome', subject: '', body: '' });
 
   const filteredLogs = useMemo(() => {
@@ -55,17 +62,86 @@ export default function Communications() {
     toast.success(t.toast.copied);
   };
 
-  const handleAddLog = () => {
+  // Create or update a communication log
+  const handleSaveLog = async () => {
     if (!logForm.subject) return;
     const client = clients.find(c => c.id === logForm.clientId);
-    addCommunicationLog({
-      type: logForm.type, clientId: logForm.clientId, clientName: client?.companyName || 'Unknown',
-      contactPerson: logForm.contactPerson, subject: logForm.subject,
-      summary: logForm.summary, nextAction: logForm.nextAction || undefined,
+
+    try {
+      if (editLogId) {
+        // Update existing entry
+        await updateCommunicationLog(editLogId, {
+          type: logForm.type,
+          clientId: logForm.clientId,
+          clientName: client?.companyName || 'Unknown',
+          contactPerson: logForm.contactPerson,
+          subject: logForm.subject,
+          summary: logForm.summary,
+          nextAction: logForm.nextAction || undefined,
+        });
+        toast.success(t.toast.changesSaved);
+      } else {
+        // Create new entry
+        await addCommunicationLog({
+          type: logForm.type, clientId: logForm.clientId, clientName: client?.companyName || 'Unknown',
+          contactPerson: logForm.contactPerson, subject: logForm.subject,
+          summary: logForm.summary, nextAction: logForm.nextAction || undefined,
+        });
+
+        // If Next Action has a date → auto-create task
+        if (logForm.nextAction && logForm.nextActionDate) {
+          try {
+            await addTask({
+              title: logForm.nextAction,
+              description: `From activity: ${logForm.subject}`,
+              status: 'todo',
+              priority: 'medium',
+              clientId: logForm.clientId || undefined,
+              clientName: client?.companyName || undefined,
+              category: 'follow-up',
+              dueDate: logForm.nextActionDate,
+              isRecurring: false,
+              notes: '',
+              visibility: 'team',
+              sharedWith: [],
+            });
+            toast.success(t.toast.commLogged + ' — Task created');
+          } catch {
+            toast.success(t.toast.commLogged);
+            toast.error('Activity saved but task creation failed');
+          }
+        } else {
+          toast.success(t.toast.commLogged);
+        }
+      }
+
+      setShowAddLog(false);
+      setEditLogId(null);
+      setLogForm(emptyLogForm);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save');
+    }
+  };
+
+  const startEditLog = (log: typeof communicationLogs[0]) => {
+    setEditLogId(log.id);
+    setLogForm({
+      type: log.type,
+      clientId: log.clientId,
+      contactPerson: log.contactPerson || '',
+      subject: log.subject,
+      summary: log.summary,
+      nextAction: log.nextAction || '',
+      nextActionDate: '',
     });
-    setShowAddLog(false);
-    setLogForm({ type: 'email', clientId: '', contactPerson: '', subject: '', summary: '', nextAction: '' });
-    toast.success(t.toast.commLogged);
+    setShowAddLog(true);
+  };
+
+  const confirmDeleteLog = async () => {
+    if (!deleteLogId) return;
+    await deleteCommunicationLog(deleteLogId);
+    setDeleteLogId(null);
+    toast.success(t.toast.entryDeleted);
   };
 
   const handleSaveTpl = () => {
@@ -89,6 +165,8 @@ export default function Communications() {
     return groups;
   }, {} as Record<string, typeof filteredLogs>);
 
+  const deleteTarget = deleteLogId ? communicationLogs.find(l => l.id === deleteLogId) : null;
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -102,7 +180,7 @@ export default function Communications() {
       {tab === 'log' && (
         <>
           <div className="flex items-center gap-3 mb-6">
-            <button className="btn-primary" onClick={() => setShowAddLog(true)}><Plus size={16} /> {t.comms.logCommunication}</button>
+            <button className="btn-primary" onClick={() => { setEditLogId(null); setLogForm(emptyLogForm); setShowAddLog(true); }}><Plus size={16} /> {t.comms.logCommunication}</button>
             <div className="relative flex-1 max-w-xs">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input name="search" className="input pl-9" placeholder={t.comms.searchComms} value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -119,13 +197,29 @@ export default function Communications() {
                 <div className="text-xs font-semibold text-slate-400 uppercase mb-2">{formatDate(date)}</div>
                 <div className="space-y-1">
                   {logs.map(log => (
-                    <div key={log.id} className="card px-4 py-3">
+                    <div key={log.id} className="card px-4 py-3 group">
                       <div className="flex items-center gap-3 min-w-0">
                         <span className="badge-gray text-[10px] flex-shrink-0">{log.type}</span>
                         <span className="text-sm font-medium text-slate-900 truncate">{log.subject}</span>
                         <span className="text-xs text-slate-500 flex-shrink-0">{log.clientName}</span>
                         <span className="text-xs text-slate-400 truncate hidden md:block">{log.summary.slice(0, 80)}{log.summary.length > 80 ? '...' : ''}</span>
-                        <span className="text-xs text-slate-400 flex-shrink-0 ml-auto">{log.createdAt.split('T')[1]?.slice(0, 5) || ''}</span>
+                        <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
+                          <span className="text-xs text-slate-400">{log.createdAt.split('T')[1]?.slice(0, 5) || ''}</span>
+                          <button
+                            onClick={() => startEditLog(log)}
+                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"
+                            title="Edit"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                          <button
+                            onClick={() => setDeleteLogId(log.id)}
+                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-slate-400 hover:text-danger-500 transition-all"
+                            title="Delete"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </div>
                       {log.nextAction && (
                         <div className="mt-1.5 px-2 py-1 bg-primary-50 rounded text-xs text-primary-700 font-medium">
@@ -140,8 +234,9 @@ export default function Communications() {
             {filteredLogs.length === 0 && <div className="text-center py-16 text-sm text-slate-500">{t.comms.noCommunications}</div>}
           </div>
 
-          <Modal isOpen={showAddLog} onClose={() => setShowAddLog(false)} title={t.comms.logCommunication}
-            footer={<><button className="btn-secondary" onClick={() => setShowAddLog(false)}>{t.common.cancel}</button><button className="btn-primary" onClick={handleAddLog}>{t.common.save}</button></>}
+          {/* Add / Edit Log Modal */}
+          <Modal isOpen={showAddLog} onClose={() => { setShowAddLog(false); setEditLogId(null); }} title={editLogId ? 'Edit Activity' : t.comms.logCommunication}
+            footer={<><button className="btn-secondary" onClick={() => { setShowAddLog(false); setEditLogId(null); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleSaveLog}>{t.common.save}</button></>}
           >
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -151,8 +246,65 @@ export default function Communications() {
               <div><label className="label">{t.clients.contactPerson}</label><input name="contactPerson" className="input" value={logForm.contactPerson} onChange={(e) => setLogForm({ ...logForm, contactPerson: e.target.value })} /></div>
               <div><label className="label">{t.clients.subject} *</label><input name="subject" className="input" value={logForm.subject} onChange={(e) => setLogForm({ ...logForm, subject: e.target.value })} /></div>
               <div><label className="label">{t.clients.summary}</label><textarea name="summary" className="textarea" rows={4} value={logForm.summary} onChange={(e) => setLogForm({ ...logForm, summary: e.target.value })} /></div>
-              <div><label className="label">{t.clients.nextAction}</label><input name="nextAction" className="input" value={logForm.nextAction} onChange={(e) => setLogForm({ ...logForm, nextAction: e.target.value })} /></div>
+
+              {/* Next Action section */}
+              <div className="border-t border-slate-100 pt-3">
+                <label className="label flex items-center gap-1.5">
+                  {t.clients.nextAction}
+                  {!editLogId && logForm.nextAction && logForm.nextActionDate && (
+                    <span className="text-[10px] font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                      <ArrowRight size={9} /> Will create task
+                    </span>
+                  )}
+                </label>
+                <input
+                  name="nextAction"
+                  className="input"
+                  placeholder="e.g. Follow up about contract terms"
+                  value={logForm.nextAction}
+                  onChange={(e) => setLogForm({ ...logForm, nextAction: e.target.value })}
+                />
+
+                {/* Due date — only shown when next action has text and not editing */}
+                {!editLogId && logForm.nextAction.trim() && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <CalendarDays size={14} className="text-slate-400" />
+                    <input
+                      type="date"
+                      name="nextActionDate"
+                      className="input w-44 text-sm"
+                      value={logForm.nextActionDate}
+                      onChange={(e) => setLogForm({ ...logForm, nextActionDate: e.target.value })}
+                    />
+                    <span className="text-xs text-slate-400">
+                      {logForm.nextActionDate ? 'Task will be created with this deadline' : 'Add date to create a task automatically'}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
+          </Modal>
+
+          {/* Delete Confirmation Modal */}
+          <Modal isOpen={!!deleteTarget} onClose={() => setDeleteLogId(null)} title="Delete Activity Entry"
+            footer={<>
+              <button className="btn-secondary" onClick={() => setDeleteLogId(null)}>{t.common.cancel}</button>
+              <button className="btn-danger" onClick={confirmDeleteLog}>{t.common.delete}</button>
+            </>}
+          >
+            {deleteTarget && (
+              <div className="space-y-3">
+                <p className="text-sm text-slate-600">Are you sure you want to delete this entry?</p>
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="badge-gray text-[10px]">{deleteTarget.type}</span>
+                    <span className="text-sm font-medium text-slate-900">{deleteTarget.subject}</span>
+                  </div>
+                  <p className="text-xs text-slate-500">{deleteTarget.clientName} — {formatDate(deleteTarget.createdAt)}</p>
+                </div>
+                <p className="text-xs text-slate-400">This action cannot be undone.</p>
+              </div>
+            )}
           </Modal>
         </>
       )}
