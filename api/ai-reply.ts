@@ -99,34 +99,42 @@ BUSINESS BEHAVIOR:
 - Keep suggestions natural. Never sound like a salesperson.
 ${context ? `\nTEMPLATE TO ADAPT:\n${context}\n\nUse this template as a starting point but rewrite it naturally for this specific client message. Do not copy it word for word.` : ''}`;
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
+    // Try models in order: 2.0-flash first, then 1.5-flash as fallback
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    let reply: string | undefined;
+    let lastError = '';
 
-    const geminiRes = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          { role: 'user', parts: [{ text: `${systemPrompt}\n\n---\nCLIENT MESSAGE:\n${clientMessage}` }] },
-        ],
-        generationConfig: {
-          temperature: 0.6,
-          topP: 0.9,
-          maxOutputTokens: maxLength === 'short' ? 200 : maxLength === 'long' ? 600 : 350,
-        },
-      }),
-    });
+    for (const model of models) {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text().catch(() => '');
-      console.error('[ai-reply] Gemini error:', geminiRes.status, errText);
-      return new Response(JSON.stringify({ error: 'AI generation failed' }), { status: 502, headers: corsHeaders });
+      const geminiRes = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            { role: 'user', parts: [{ text: `${systemPrompt}\n\n---\nCLIENT MESSAGE:\n${clientMessage}` }] },
+          ],
+          generationConfig: {
+            temperature: 0.6,
+            topP: 0.9,
+            maxOutputTokens: maxLength === 'short' ? 200 : maxLength === 'long' ? 600 : 350,
+          },
+        }),
+      });
+
+      if (!geminiRes.ok) {
+        lastError = await geminiRes.text().catch(() => `HTTP ${geminiRes.status}`);
+        console.error(`[ai-reply] ${model} failed:`, geminiRes.status, lastError);
+        continue; // try next model
+      }
+
+      const geminiData = await geminiRes.json();
+      reply = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (reply) break; // success
     }
 
-    const geminiData = await geminiRes.json();
-    const reply = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
-
     if (!reply) {
-      return new Response(JSON.stringify({ error: 'AI returned empty response' }), { status: 502, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: `AI generation failed: ${lastError.slice(0, 100)}` }), { status: 502, headers: corsHeaders });
     }
 
     return new Response(JSON.stringify({ reply: reply.trim() }), { status: 200, headers: corsHeaders });
