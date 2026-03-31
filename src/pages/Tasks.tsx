@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Search, CheckCircle2, Circle, RotateCcw, Trash2, LayoutGrid, List, Clock, X, GripVertical } from 'lucide-react';
+import { Plus, Search, CheckCircle2, Circle, RotateCcw, Trash2, LayoutGrid, List, Clock, X, GripVertical, Phone, User, Building2, ArrowRight, MessageSquare, CalendarDays } from 'lucide-react';
 import useStore from '../stores/useStore';
 import { formatDate, formatRelative, isOverdue, isDueToday, getTimeGroup, type TimeGroup, generateId } from '../utils/helpers';
 import StatusBadge from '../components/ui/StatusBadge';
@@ -9,9 +9,241 @@ import Modal from '../components/ui/Modal';
 import { useTranslation } from '../i18n/useTranslation';
 import useToastStore from '../stores/useToastStore';
 import VisibilityPicker, { VisibilityBadge } from '../components/ui/VisibilityPicker';
-import type { Visibility } from '../types';
+import type { Visibility, Task, Client } from '../types';
 
 const PRIORITY_ORDER: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+
+/* ── Task Detail Modal (one-screen workflow) ── */
+function TaskDetailModal({ task, clients, onClose, updateTask, deleteTask, toggleTaskChecklistItem, t, lang, toast }: {
+  task: Task | null | undefined;
+  clients: Client[];
+  onClose: () => void;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+  toggleTaskChecklistItem: (taskId: string, itemId: string) => void;
+  t: any; lang: string; toast: any;
+}) {
+  const { addCommunicationLog, addTask } = useStore();
+  const [noteText, setNoteText] = useState('');
+  const [nextAction, setNextAction] = useState('');
+  const [nextActionDate, setNextActionDate] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const client = task?.clientId ? clients.find(c => c.id === task.clientId) : null;
+
+  const handleSaveNote = async () => {
+    if (!task || !noteText.trim()) return;
+    setSaving(true);
+    try {
+      // Save note to task
+      const updatedNotes = task.notes ? `${task.notes}\n\n[${new Date().toLocaleDateString()}] ${noteText}` : `[${new Date().toLocaleDateString()}] ${noteText}`;
+      await updateTask(task.id, { notes: updatedNotes });
+
+      // Also log as activity if client is linked
+      if (task.clientId && client) {
+        await addCommunicationLog({
+          type: 'internal_note',
+          clientId: task.clientId,
+          clientName: client.companyName,
+          contactPerson: client.responsiblePerson,
+          subject: task.title,
+          summary: noteText,
+          nextAction: nextAction || undefined,
+        });
+      }
+
+      // Create follow-up task if next action + date provided
+      if (nextAction.trim() && nextActionDate) {
+        try {
+          await addTask({
+            title: nextAction,
+            description: `Follow-up from: ${task.title}`,
+            status: 'todo',
+            priority: 'medium',
+            clientId: task.clientId || undefined,
+            clientName: client?.companyName || task.clientName,
+            category: 'follow-up',
+            dueDate: nextActionDate,
+            isRecurring: false,
+            notes: '',
+            visibility: 'team',
+            sharedWith: [],
+          });
+          toast.success(lang === 'lt' ? 'Užrašas išsaugotas, sukurta nauja užduotis' : 'Note saved, follow-up task created');
+        } catch {
+          toast.success(lang === 'lt' ? 'Užrašas išsaugotas' : 'Note saved');
+          toast.error(lang === 'lt' ? 'Nepavyko sukurti užduoties' : 'Failed to create follow-up task');
+        }
+      } else {
+        toast.success(lang === 'lt' ? 'Užrašas išsaugotas' : 'Note saved');
+      }
+
+      setNoteText('');
+      setNextAction('');
+      setNextActionDate('');
+    } catch {
+      toast.error(lang === 'lt' ? 'Nepavyko išsaugoti' : 'Failed to save');
+    }
+    setSaving(false);
+  };
+
+  if (!task) return null;
+
+  return (
+    <Modal isOpen onClose={onClose} title={task.title} size="lg"
+      footer={<>
+        <button className="btn-danger btn-sm" onClick={async () => { await deleteTask(task.id); onClose(); toast.success(t.toast.taskDeleted); }}><Trash2 size={14} /> {t.common.delete}</button>
+        <div className="flex-1" />
+        <button className="btn-secondary" onClick={onClose}>{t.common.close}</button>
+        {task.status !== 'completed' && <button className="btn-primary" onClick={async () => { await updateTask(task.id, { status: 'completed', completedAt: new Date().toISOString() }); onClose(); toast.success(t.toast.taskCompleted); }}>{t.tasks.markComplete}</button>}
+      </>}
+    >
+      <div className="space-y-4">
+        {/* Badges row */}
+        <div className="flex gap-2 flex-wrap">
+          <PriorityBadge priority={task.priority} />
+          <StatusBadge status={task.status} />
+          {task.isRecurring && <span className="badge-purple"><RotateCcw size={10} className="mr-1" />{task.recurringInterval}</span>}
+          <span className="badge-gray">{task.category}</span>
+        </div>
+
+        {task.description && <p className="text-sm text-slate-700">{task.description}</p>}
+
+        {/* Client context card */}
+        {client && (
+          <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center flex-shrink-0">
+                <Building2 size={16} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-slate-900">{client.companyName}</div>
+                <div className="flex items-center gap-3 mt-1 flex-wrap">
+                  {client.responsiblePerson && (
+                    <span className="text-xs text-slate-600 flex items-center gap-1">
+                      <User size={11} /> {client.responsiblePerson}
+                      {client.responsiblePersonRole && <span className="text-slate-400">({client.responsiblePersonRole})</span>}
+                    </span>
+                  )}
+                  {client.phone && (
+                    <a href={`tel:${client.phone}`} className="text-xs text-primary-600 font-medium flex items-center gap-1 hover:underline">
+                      <Phone size={11} /> {client.phone}
+                    </a>
+                  )}
+                </div>
+                {client.nextAction && (
+                  <div className="text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded mt-1.5 inline-block">
+                    {t.clients.nextAction}: {client.nextAction}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Due date + status row */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="label">{t.tasks.dueDate}</label>
+            <div className={`text-sm font-medium ${isOverdue(task.dueDate) ? 'text-danger-600' : 'text-slate-900'}`}>
+              {formatDate(task.dueDate) || '—'}
+              {task.dueTime && <span className="ml-1 text-slate-500 font-normal">({task.dueTime})</span>}
+              {isOverdue(task.dueDate) && <span className="ml-2 text-[10px] uppercase font-bold text-danger-600">{t.common.overdue}</span>}
+            </div>
+          </div>
+          <div>
+            <label className="label">{t.common.status}</label>
+            <select name="status" className="select w-full" value={task.status} onChange={async (e) => await updateTask(task.id, { status: e.target.value as any })}>
+              <option value="todo">{t.tasks.toDo}</option><option value="in_progress">{t.tasks.inProgress}</option><option value="waiting">{t.tasks.waiting}</option>
+              <option value="blocked">{t.tasks.blocked}</option><option value="completed">{t.tasks.completed}</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Checklist */}
+        {task.checklistItems && task.checklistItems.length > 0 && (
+          <div>
+            <label className="label">{t.tasks.checklist} ({task.checklistItems.filter(ci => ci.completed).length}/{task.checklistItems.length})</label>
+            <div className="space-y-1">
+              {task.checklistItems.map(ci => (
+                <label key={ci.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 cursor-pointer">
+                  <input type="checkbox" checked={ci.completed} onChange={() => toggleTaskChecklistItem(task.id, ci.id)}
+                    name="checklistItem" className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
+                  <span className={`text-sm ${ci.completed ? 'line-through text-slate-400' : 'text-slate-700'}`}>{ci.text}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Existing notes */}
+        {task.notes && (
+          <div>
+            <label className="label">{t.common.notes}</label>
+            <div className="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg whitespace-pre-wrap max-h-32 overflow-y-auto">{task.notes}</div>
+          </div>
+        )}
+
+        {/* Quick note + next action */}
+        {task.status !== 'completed' && (
+          <div className="border-t border-slate-200 pt-4">
+            <label className="label flex items-center gap-1.5">
+              <MessageSquare size={12} />
+              {lang === 'lt' ? 'Greitas užrašas' : 'Quick Note'}
+            </label>
+            <textarea
+              name="quickNote"
+              className="textarea"
+              rows={2}
+              placeholder={lang === 'lt' ? 'Ką padarėte? Kas nutiko?...' : 'What happened? What did you do?...'}
+              value={noteText}
+              onChange={e => setNoteText(e.target.value)}
+            />
+
+            {noteText.trim() && (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <ArrowRight size={12} className="text-slate-400 flex-shrink-0" />
+                  <input
+                    name="nextAction"
+                    className="input flex-1 text-sm"
+                    placeholder={lang === 'lt' ? 'Kitas veiksmas (neprivaloma)' : 'Next action (optional)'}
+                    value={nextAction}
+                    onChange={e => setNextAction(e.target.value)}
+                  />
+                </div>
+                {nextAction.trim() && (
+                  <div className="flex items-center gap-2 ml-5">
+                    <CalendarDays size={12} className="text-slate-400 flex-shrink-0" />
+                    <input
+                      type="date"
+                      name="nextActionDate"
+                      className="input w-40 text-sm"
+                      value={nextActionDate}
+                      onChange={e => setNextActionDate(e.target.value)}
+                    />
+                    <span className="text-[11px] text-slate-400">
+                      {nextActionDate
+                        ? (lang === 'lt' ? 'Bus sukurta užduotis' : 'Will create a task')
+                        : (lang === 'lt' ? 'Pridėkite datą užduočiai sukurti' : 'Add date to create task')}
+                    </span>
+                  </div>
+                )}
+                <button
+                  className="btn-primary btn-sm"
+                  disabled={saving}
+                  onClick={handleSaveNote}
+                >
+                  {saving ? (lang === 'lt' ? 'Saugoma...' : 'Saving...') : (lang === 'lt' ? 'Išsaugoti užrašą' : 'Save Note')}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+}
 
 const TIME_GROUP_ORDER: TimeGroup[] = ['overdue', 'today', 'tomorrow', 'this_week', 'next_week', 'later', 'no_date'];
 
@@ -406,66 +638,17 @@ export default function Tasks() {
       )}
 
       {/* Task Detail Modal */}
-      <Modal isOpen={!!task} onClose={() => setSelectedTask(null)} title={task?.title || ''} size="lg"
-        footer={task ? <>
-          <button className="btn-danger btn-sm" onClick={async () => { await deleteTask(task.id); setSelectedTask(null); toast.success(t.toast.taskDeleted); }}><Trash2 size={14} /> {t.common.delete}</button>
-          <div className="flex-1" />
-          <button className="btn-secondary" onClick={() => setSelectedTask(null)}>{t.common.close}</button>
-          {task.status !== 'completed' && <button className="btn-primary" onClick={async () => { await updateTask(task.id, { status: 'completed', completedAt: new Date().toISOString() }); setSelectedTask(null); toast.success(t.toast.taskCompleted); }}>{t.tasks.markComplete}</button>}
-        </> : undefined}
-      >
-        {task && (
-          <div className="space-y-4">
-            <div className="flex gap-2 flex-wrap">
-              <PriorityBadge priority={task.priority} />
-              <StatusBadge status={task.status} />
-              {task.isRecurring && <span className="badge-purple"><RotateCcw size={10} className="mr-1" />{task.recurringInterval}</span>}
-              <span className="badge-gray">{task.category}</span>
-            </div>
-            {task.description && <p className="text-sm text-slate-700">{task.description}</p>}
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><span className="text-slate-500">{t.common.client}:</span> <span className="text-slate-900">{task.clientName || '—'}</span></div>
-              <div>
-                <span className="text-slate-500">{t.tasks.dueDate}:</span>{' '}
-                <span className={`${isOverdue(task.dueDate) ? 'text-danger-600 font-medium' : 'text-slate-900'}`}>
-                  {formatDate(task.dueDate)}
-                  {task.dueTime && <span className="ml-1 text-slate-500">({task.dueTime})</span>}
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <label className="label">{t.common.status}</label>
-              <select name="status" className="select w-48" value={task.status} onChange={async (e) => await updateTask(task.id, { status: e.target.value as any })}>
-                <option value="todo">{t.tasks.toDo}</option><option value="in_progress">{t.tasks.inProgress}</option><option value="waiting">{t.tasks.waiting}</option>
-                <option value="blocked">{t.tasks.blocked}</option><option value="completed">{t.tasks.completed}</option>
-              </select>
-            </div>
-
-            {task.checklistItems && task.checklistItems.length > 0 && (
-              <div>
-                <label className="label">{t.tasks.checklist} ({task.checklistItems.filter(ci => ci.completed).length}/{task.checklistItems.length})</label>
-                <div className="space-y-1">
-                  {task.checklistItems.map(ci => (
-                    <label key={ci.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 cursor-pointer">
-                      <input type="checkbox" checked={ci.completed} onChange={() => toggleTaskChecklistItem(task.id, ci.id)}
-                        name="checklistItem" className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
-                      <span className={`text-sm ${ci.completed ? 'line-through text-slate-400' : 'text-slate-700'}`}>{ci.text}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {task.notes && (
-              <div>
-                <label className="label">{t.common.notes}</label>
-                <div className="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg whitespace-pre-wrap">{task.notes}</div>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
+      <TaskDetailModal
+        task={task}
+        clients={clients}
+        onClose={() => setSelectedTask(null)}
+        updateTask={updateTask}
+        deleteTask={deleteTask}
+        toggleTaskChecklistItem={toggleTaskChecklistItem}
+        t={t}
+        lang={lang}
+        toast={toast}
+      />
 
       {/* Add Task Modal */}
       <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setSearchParams({}); }} title={t.tasks.newTask} size="lg"
