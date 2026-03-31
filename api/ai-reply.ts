@@ -99,13 +99,19 @@ BUSINESS BEHAVIOR:
 - Keep suggestions natural. Never sound like a salesperson.
 ${context ? `\nTEMPLATE TO ADAPT:\n${context}\n\nUse this template as a starting point but rewrite it naturally for this specific client message. Do not copy it word for word.` : ''}`;
 
-    // Try models in priority order — broadest compatibility
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-pro'];
+    // Try different API versions + models for broadest compatibility
+    const attempts = [
+      { ver: 'v1beta', model: 'gemini-2.0-flash' },
+      { ver: 'v1beta', model: 'gemini-1.5-flash' },
+      { ver: 'v1', model: 'gemini-pro' },
+      { ver: 'v1beta', model: 'gemini-2.0-flash-lite' },
+      { ver: 'v1', model: 'gemini-1.5-flash' },
+    ];
     let reply: string | undefined;
     let lastError = '';
 
-    for (const model of models) {
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+    for (const { ver, model } of attempts) {
+      const geminiUrl = `https://generativelanguage.googleapis.com/${ver}/models/${model}:generateContent?key=${geminiKey}`;
 
       const geminiRes = await fetch(geminiUrl, {
         method: 'POST',
