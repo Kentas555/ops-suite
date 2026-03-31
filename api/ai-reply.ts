@@ -99,48 +99,34 @@ BUSINESS BEHAVIOR:
 - Keep suggestions natural. Never sound like a salesperson.
 ${context ? `\nTEMPLATE TO ADAPT:\n${context}\n\nUse this template as a starting point but rewrite it naturally for this specific client message. Do not copy it word for word.` : ''}`;
 
-    // Try different API versions + models for broadest compatibility
-    const attempts = [
-      { ver: 'v1beta', model: 'gemini-2.0-flash' },
-      { ver: 'v1beta', model: 'gemini-1.5-flash' },
-      { ver: 'v1', model: 'gemini-pro' },
-      { ver: 'v1beta', model: 'gemini-2.0-flash-lite' },
-      { ver: 'v1', model: 'gemini-1.5-flash' },
-    ];
-    let reply: string | undefined;
-    let lastError = '';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
 
-    for (const { ver, model } of attempts) {
-      const geminiUrl = `https://generativelanguage.googleapis.com/${ver}/models/${model}:generateContent?key=${geminiKey}`;
+    const geminiRes = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          { role: 'user', parts: [{ text: `${systemPrompt}\n\n---\nCLIENT MESSAGE:\n${clientMessage}` }] },
+        ],
+        generationConfig: {
+          temperature: 0.6,
+          topP: 0.9,
+          maxOutputTokens: maxLength === 'short' ? 200 : maxLength === 'long' ? 600 : 350,
+        },
+      }),
+    });
 
-      const geminiRes = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            { role: 'user', parts: [{ text: `${systemPrompt}\n\n---\nCLIENT MESSAGE:\n${clientMessage}` }] },
-          ],
-          generationConfig: {
-            temperature: 0.6,
-            topP: 0.9,
-            maxOutputTokens: maxLength === 'short' ? 200 : maxLength === 'long' ? 600 : 350,
-          },
-        }),
-      });
-
-      if (!geminiRes.ok) {
-        lastError = await geminiRes.text().catch(() => `HTTP ${geminiRes.status}`);
-        console.error(`[ai-reply] ${model} failed:`, geminiRes.status, lastError);
-        continue; // try next model
-      }
-
-      const geminiData = await geminiRes.json();
-      reply = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (reply) break; // success
+    if (!geminiRes.ok) {
+      const errBody = await geminiRes.text().catch(() => '');
+      console.error('[ai-reply] Gemini error:', geminiRes.status, errBody);
+      return new Response(JSON.stringify({ error: `Gemini API error (${geminiRes.status}): ${errBody.slice(0, 150)}` }), { status: 502, headers: corsHeaders });
     }
 
+    const geminiData = await geminiRes.json();
+    const reply = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+
     if (!reply) {
-      return new Response(JSON.stringify({ error: `AI generation failed: ${lastError.slice(0, 100)}` }), { status: 502, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: 'AI returned empty response' }), { status: 502, headers: corsHeaders });
     }
 
     return new Response(JSON.stringify({ reply: reply.trim() }), { status: 200, headers: corsHeaders });
