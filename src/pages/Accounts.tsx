@@ -158,17 +158,17 @@ export default function Accounts() {
                           {step.status !== 'completed' && step.status !== 'skipped' && (
                             <>
                               <button className="px-2.5 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded hover:bg-slate-200"
-                                onClick={(e) => { e.stopPropagation(); updateWorkflowStep(wf.id, step.id, { status: 'completed', completedAt: new Date().toISOString() }); toast.success(t.toast.stepCompleted); }}>
+                                onClick={async (e) => { e.stopPropagation(); await updateWorkflowStep(wf.id, step.id, { status: 'completed', completedAt: new Date().toISOString() }); toast.success(t.toast.stepCompleted); }}>
                                 {t.common.complete}
                               </button>
                               {step.status !== 'blocked' && (
                                 <button className="text-xs text-slate-400 hover:text-slate-600 underline"
-                                  onClick={(e) => { e.stopPropagation(); updateWorkflowStep(wf.id, step.id, { status: 'blocked', notes: lang === 'lt' ? 'Blokuota — reikia sprendimo' : 'Blocked — needs resolution' }); }}>
+                                  onClick={async (e) => { e.stopPropagation(); await updateWorkflowStep(wf.id, step.id, { status: 'blocked', notes: lang === 'lt' ? 'Blokuota — reikia sprendimo' : 'Blocked — needs resolution' }); }}>
                                   {t.common.block}
                                 </button>
                               )}
                               <button className="text-xs text-slate-400 hover:text-slate-600 underline"
-                                onClick={(e) => { e.stopPropagation(); updateWorkflowStep(wf.id, step.id, { status: 'skipped' }); }}>
+                                onClick={async (e) => { e.stopPropagation(); await updateWorkflowStep(wf.id, step.id, { status: 'skipped' }); }}>
                                 {t.common.skip}
                               </button>
                             </>

@@ -45,10 +45,13 @@ const useReminderStore = create<ReminderState>()((set, get) => ({
   initialized: false,
 
   fetchReminders: async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('reminders')
       .select('*')
       .order('due_at');
+    if (error) {
+      console.error('[fetchReminders] error:', error.message);
+    }
     set({
       reminders: (data || []).map(r => mapReminder(r as Record<string, unknown>)),
       initialized: true,
@@ -70,7 +73,7 @@ const useReminderStore = create<ReminderState>()((set, get) => ({
 
     set(s => ({ reminders: [...s.reminders, newReminder] }));
 
-    await supabase.from('reminders').insert({
+    const { error } = await supabase.from('reminders').insert({
       id,
       title: reminderData.title,
       description: reminderData.description,
@@ -81,25 +84,32 @@ const useReminderStore = create<ReminderState>()((set, get) => ({
       is_dismissed: false,
       user_id: user.id,
     });
+    if (error) {
+      console.error('[addReminder] INSERT failed:', error.message);
+      set(s => ({ reminders: s.reminders.filter(r => r.id !== id) }));
+    }
   },
 
   markRead: async (id) => {
     set(s => ({
       reminders: s.reminders.map(r => r.id === id ? { ...r, isRead: true } : r),
     }));
-    await supabase.from('reminders').update({ is_read: true }).eq('id', id);
+    const { error } = await supabase.from('reminders').update({ is_read: true }).eq('id', id);
+    if (error) console.error('[markRead] UPDATE failed:', error.message);
   },
 
   dismiss: async (id) => {
     set(s => ({
       reminders: s.reminders.map(r => r.id === id ? { ...r, isDismissed: true, isRead: true } : r),
     }));
-    await supabase.from('reminders').update({ is_dismissed: true, is_read: true }).eq('id', id);
+    const { error } = await supabase.from('reminders').update({ is_dismissed: true, is_read: true }).eq('id', id);
+    if (error) console.error('[dismiss] UPDATE failed:', error.message);
   },
 
   deleteReminder: async (id) => {
     set(s => ({ reminders: s.reminders.filter(r => r.id !== id) }));
-    await supabase.from('reminders').delete().eq('id', id);
+    const { error } = await supabase.from('reminders').delete().eq('id', id);
+    if (error) console.error('[deleteReminder] DELETE failed:', error.message);
   },
 
   getActiveReminders: () => {

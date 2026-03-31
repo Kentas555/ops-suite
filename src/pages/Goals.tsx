@@ -92,7 +92,7 @@ export default function Goals() {
   const handleSave = async () => {
     if (!form.title.trim()) return;
     if (editId) {
-      updateGoal(editId, { title: form.title, period: form.period, status: form.status, reflection: form.reflection });
+      await updateGoal(editId, { title: form.title, period: form.period, status: form.status, reflection: form.reflection });
       toast.success(t.toast.changesSaved);
       setShowAdd(false);
       setEditId(null);
@@ -224,7 +224,7 @@ export default function Goals() {
                           <button onClick={() => startEdit(goal)} className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600">
                             <Edit2 size={14} />
                           </button>
-                          <button onClick={() => { deleteGoal(goal.id); toast.success(t.toast.entryDeleted); }} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-danger-600">
+                          <button onClick={async () => { await deleteGoal(goal.id); toast.success(t.toast.entryDeleted); }} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-danger-600">
                             <Trash2 size={14} />
                           </button>
                         </div>

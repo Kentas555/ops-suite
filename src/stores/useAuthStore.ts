@@ -15,7 +15,7 @@ export interface AppProfile {
 interface AuthState {
   session: Session | null;
   profile: AppProfile | null;
-  profiles: AppProfile[]; // all profiles — loaded for admin view
+  profiles: AppProfile[];
   initialized: boolean;
 
   initialize: () => Promise<() => void>;
@@ -42,6 +42,15 @@ function mapProfile(row: Record<string, unknown>, email?: string): AppProfile {
   };
 }
 
+async function safeFetchJson(res: Response): Promise<{ ok: boolean; json: any }> {
+  try {
+    const json = await res.json();
+    return { ok: res.ok, json };
+  } catch {
+    return { ok: false, json: { error: `HTTP ${res.status}` } };
+  }
+}
+
 const useAuthStore = create<AuthState>()((set, get) => ({
   session: null,
   profile: null,
@@ -49,7 +58,6 @@ const useAuthStore = create<AuthState>()((set, get) => ({
   initialized: false,
 
   initialize: async () => {
-    // Load initial session
     const { data: { session } } = await supabase.auth.getSession();
 
     if (session?.user) {
@@ -60,10 +68,11 @@ const useAuthStore = create<AuthState>()((set, get) => ({
         .single();
 
       if (data) {
-        await supabase
+        supabase
           .from('profiles')
           .update({ last_login_at: new Date().toISOString() })
-          .eq('id', session.user.id);
+          .eq('id', session.user.id)
+          .then(({ error }) => { if (error) console.error('[auth] last_login_at update failed:', error.message); });
 
         set({
           session,
@@ -115,8 +124,7 @@ const useAuthStore = create<AuthState>()((set, get) => ({
   },
 
   getCurrentUser: () => {
-    const { profile } = get();
-    return profile;
+    return get().profile;
   },
 
   fetchProfiles: async () => {
@@ -146,10 +154,9 @@ const useAuthStore = create<AuthState>()((set, get) => ({
       body: JSON.stringify({ email, password, displayName, role }),
     });
 
-    const json = await res.json();
-    if (!res.ok) return { success: false, error: json.error ?? 'Failed to create user' };
+    const { ok, json } = await safeFetchJson(res);
+    if (!ok) return { success: false, error: json.error ?? 'Failed to create user' };
 
-    // Refresh the profiles list
     await get().fetchProfiles();
     return { success: true };
   },
@@ -171,8 +178,8 @@ const useAuthStore = create<AuthState>()((set, get) => ({
       },
       body: JSON.stringify({ userId, newPassword }),
     });
-    const json = await res.json();
-    if (!res.ok) return { success: false, error: json.error ?? 'Failed to reset password' };
+    const { ok, json } = await safeFetchJson(res);
+    if (!ok) return { success: false, error: json.error ?? 'Failed to reset password' };
     return { success: true };
   },
 
@@ -182,7 +189,11 @@ const useAuthStore = create<AuthState>()((set, get) => ({
     if (updates.role !== undefined) dbUpdates.role = updates.role;
     if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
 
-    await supabase.from('profiles').update(dbUpdates).eq('id', id);
+    const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', id);
+    if (error) {
+      console.error('[updateProfile] UPDATE failed:', error.message);
+      return;
+    }
 
     set(s => ({
       profiles: s.profiles.map(p => p.id === id ? { ...p, ...updates } : p),

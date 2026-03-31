@@ -454,19 +454,7 @@ const useStore = create<AppState>()(
 
       // ── Fetch all data from Supabase on login ──
       fetchAll: async () => {
-        const [
-          { data: clients },
-          { data: tasks },
-          { data: contracts },
-          { data: accountWorkflows },
-          { data: communicationLogs },
-          { data: knowledgeEntries },
-          { data: sopChecklists },
-          { data: quickNotes },
-          { data: communicationTemplates },
-          { data: quickReplies },
-          { data: goals },
-        ] = await Promise.all([
+        const results = await Promise.all([
           supabase.from('clients').select('*').order('created_at'),
           supabase.from('tasks').select('*').order('created_at'),
           supabase.from('contracts').select('*').order('created_at'),
@@ -480,18 +468,23 @@ const useStore = create<AppState>()(
           supabase.from('goals').select('*').order('created_at'),
         ]);
 
+        const tables = ['clients','tasks','contracts','account_workflows','communication_logs','knowledge_entries','sop_checklists','quick_notes','communication_templates','quick_replies','goals'];
+        results.forEach((r, i) => { if (r.error) console.error(`[fetchAll] ${tables[i]}:`, r.error.message); });
+
+        const [c, ta, co, aw, cl, ke, sc, qn, ct, qr, g] = results.map(r => r.data);
+
         set({
-          clients: (clients || []).map(r => mapClient(r as Record<string, unknown>)),
-          tasks: (tasks || []).map(r => mapTask(r as Record<string, unknown>)),
-          contracts: (contracts || []).map(r => mapContract(r as Record<string, unknown>)),
-          accountWorkflows: (accountWorkflows || []).map(r => mapWorkflow(r as Record<string, unknown>)),
-          communicationLogs: (communicationLogs || []).map(r => mapCommLog(r as Record<string, unknown>)),
-          knowledgeEntries: (knowledgeEntries || []).map(r => mapKnowledge(r as Record<string, unknown>)),
-          sopChecklists: (sopChecklists || []).map(r => mapSOP(r as Record<string, unknown>)),
-          quickNotes: (quickNotes || []).map(r => mapQuickNote(r as Record<string, unknown>)),
-          communicationTemplates: (communicationTemplates || []).map(r => mapTemplate(r as Record<string, unknown>)),
-          quickReplies: (quickReplies || []).map(r => mapQuickReply(r as Record<string, unknown>)),
-          goals: (goals || []).map(r => mapGoal(r as Record<string, unknown>)),
+          clients: (c || []).map(r => mapClient(r as Record<string, unknown>)),
+          tasks: (ta || []).map(r => mapTask(r as Record<string, unknown>)),
+          contracts: (co || []).map(r => mapContract(r as Record<string, unknown>)),
+          accountWorkflows: (aw || []).map(r => mapWorkflow(r as Record<string, unknown>)),
+          communicationLogs: (cl || []).map(r => mapCommLog(r as Record<string, unknown>)),
+          knowledgeEntries: (ke || []).map(r => mapKnowledge(r as Record<string, unknown>)),
+          sopChecklists: (sc || []).map(r => mapSOP(r as Record<string, unknown>)),
+          quickNotes: (qn || []).map(r => mapQuickNote(r as Record<string, unknown>)),
+          communicationTemplates: (ct || []).map(r => mapTemplate(r as Record<string, unknown>)),
+          quickReplies: (qr || []).map(r => mapQuickReply(r as Record<string, unknown>)),
+          goals: (g || []).map(r => mapGoal(r as Record<string, unknown>)),
           initialized: true,
         });
       },
@@ -562,7 +555,8 @@ const useStore = create<AppState>()(
         set(s => ({
           tasks: s.tasks.map(t => t.id === taskId ? { ...t, checklistItems: updatedItems } : t),
         }));
-        await supabase.from('tasks').update({ checklist_items: updatedItems }).eq('id', taskId);
+        const { error } = await supabase.from('tasks').update({ checklist_items: updatedItems }).eq('id', taskId);
+        if (error) console.error('[toggleTaskChecklistItem] UPDATE failed:', error.message);
       },
 
       // ── Contracts ──
@@ -582,11 +576,13 @@ const useStore = create<AppState>()(
       updateContract: async (id, updates) => {
         const n = now();
         set(s => ({ contracts: s.contracts.map(c => c.id === id ? { ...c, ...updates, updatedAt: n } : c) }));
-        await supabase.from('contracts').update({ ...contractToDb(updates), updated_at: n }).eq('id', id);
+        const { error } = await supabase.from('contracts').update({ ...contractToDb(updates), updated_at: n }).eq('id', id);
+        if (error) console.error('[updateContract] UPDATE failed:', error.message);
       },
       deleteContract: async (id) => {
         set(s => ({ contracts: s.contracts.filter(c => c.id !== id) }));
-        await supabase.from('contracts').delete().eq('id', id);
+        const { error } = await supabase.from('contracts').delete().eq('id', id);
+        if (error) console.error('[deleteContract] DELETE failed:', error.message);
       },
 
       // ── Account Workflows ──
@@ -606,7 +602,8 @@ const useStore = create<AppState>()(
         set(s => ({
           accountWorkflows: s.accountWorkflows.map(w => w.id === id ? { ...w, ...updates } : w),
         }));
-        await supabase.from('account_workflows').update(workflowToDb(updates)).eq('id', id);
+        const { error } = await supabase.from('account_workflows').update(workflowToDb(updates)).eq('id', id);
+        if (error) console.error('[updateAccountWorkflow] UPDATE failed:', error.message);
       },
       updateWorkflowStep: async (workflowId, stepId, updates) => {
         const workflow = get().accountWorkflows.find(w => w.id === workflowId);
@@ -619,7 +616,8 @@ const useStore = create<AppState>()(
             w.id === workflowId ? { ...w, steps: updatedSteps } : w
           ),
         }));
-        await supabase.from('account_workflows').update({ steps: updatedSteps }).eq('id', workflowId);
+        const { error } = await supabase.from('account_workflows').update({ steps: updatedSteps }).eq('id', workflowId);
+        if (error) console.error('[updateWorkflowStep] UPDATE failed:', error.message);
       },
 
       // ── Communication Logs ──
@@ -656,10 +654,12 @@ const useStore = create<AppState>()(
             c.id === clientId ? { ...c, lastInteractionAt: n, updatedAt: n } : c
           ),
         }));
-        await Promise.all([
+        const [logRes, clientRes] = await Promise.all([
           supabase.from('communication_logs').insert(commLogToDb(newLog)),
           supabase.from('clients').update({ last_interaction_at: n, updated_at: n }).eq('id', clientId),
         ]);
+        if (logRes.error) console.error('[addInteraction] log INSERT failed:', logRes.error.message);
+        if (clientRes.error) console.error('[addInteraction] client UPDATE failed:', clientRes.error.message);
       },
 
       // ── Knowledge ──
@@ -681,11 +681,13 @@ const useStore = create<AppState>()(
         set(s => ({
           knowledgeEntries: s.knowledgeEntries.map(e => e.id === id ? { ...e, ...updates, updatedAt: n } : e),
         }));
-        await supabase.from('knowledge_entries').update({ ...knowledgeToDb(updates), updated_at: n }).eq('id', id);
+        const { error } = await supabase.from('knowledge_entries').update({ ...knowledgeToDb(updates), updated_at: n }).eq('id', id);
+        if (error) console.error('[updateKnowledgeEntry] UPDATE failed:', error.message);
       },
       deleteKnowledgeEntry: async (id) => {
         set(s => ({ knowledgeEntries: s.knowledgeEntries.filter(e => e.id !== id) }));
-        await supabase.from('knowledge_entries').delete().eq('id', id);
+        const { error } = await supabase.from('knowledge_entries').delete().eq('id', id);
+        if (error) console.error('[deleteKnowledgeEntry] DELETE failed:', error.message);
       },
 
       // ── SOP Checklists ──
@@ -705,7 +707,8 @@ const useStore = create<AppState>()(
         set(s => ({
           sopChecklists: s.sopChecklists.map(c => c.id === id ? { ...c, ...updates } : c),
         }));
-        await supabase.from('sop_checklists').update(sopToDb(updates)).eq('id', id);
+        const { error } = await supabase.from('sop_checklists').update(sopToDb(updates)).eq('id', id);
+        if (error) console.error('[updateSOPChecklist] UPDATE failed:', error.message);
       },
 
       // ── Quick Notes ──
@@ -713,15 +716,18 @@ const useStore = create<AppState>()(
         const id = uuid();
         const newNote: QuickNote = { ...noteData, id, createdAt: now() };
         set(s => ({ quickNotes: [...s.quickNotes, newNote] }));
-        await supabase.from('quick_notes').insert(quickNoteToDb(newNote));
+        const { error } = await supabase.from('quick_notes').insert(quickNoteToDb(newNote));
+        if (error) console.error('[addQuickNote] INSERT failed:', error.message);
       },
       updateQuickNote: async (id, updates) => {
         set(s => ({ quickNotes: s.quickNotes.map(n => n.id === id ? { ...n, ...updates } : n) }));
-        await supabase.from('quick_notes').update(quickNoteToDb(updates)).eq('id', id);
+        const { error } = await supabase.from('quick_notes').update(quickNoteToDb(updates)).eq('id', id);
+        if (error) console.error('[updateQuickNote] UPDATE failed:', error.message);
       },
       deleteQuickNote: async (id) => {
         set(s => ({ quickNotes: s.quickNotes.filter(n => n.id !== id) }));
-        await supabase.from('quick_notes').delete().eq('id', id);
+        const { error } = await supabase.from('quick_notes').delete().eq('id', id);
+        if (error) console.error('[deleteQuickNote] DELETE failed:', error.message);
       },
 
       // ── Communication Templates ──
@@ -729,17 +735,20 @@ const useStore = create<AppState>()(
         const id = uuid();
         const newTemplate: CommunicationTemplate = { ...templateData, id };
         set(s => ({ communicationTemplates: [...s.communicationTemplates, newTemplate] }));
-        await supabase.from('communication_templates').insert({ id, ...templateData });
+        const { error } = await supabase.from('communication_templates').insert({ id, ...templateData });
+        if (error) console.error('[addCommunicationTemplate] INSERT failed:', error.message);
       },
       updateCommunicationTemplate: async (id, updates) => {
         set(s => ({
           communicationTemplates: s.communicationTemplates.map(t => t.id === id ? { ...t, ...updates } : t),
         }));
-        await supabase.from('communication_templates').update(updates).eq('id', id);
+        const { error } = await supabase.from('communication_templates').update(updates).eq('id', id);
+        if (error) console.error('[updateCommunicationTemplate] UPDATE failed:', error.message);
       },
       deleteCommunicationTemplate: async (id) => {
         set(s => ({ communicationTemplates: s.communicationTemplates.filter(t => t.id !== id) }));
-        await supabase.from('communication_templates').delete().eq('id', id);
+        const { error } = await supabase.from('communication_templates').delete().eq('id', id);
+        if (error) console.error('[deleteCommunicationTemplate] DELETE failed:', error.message);
       },
 
       // ── Quick Replies ──
@@ -748,18 +757,21 @@ const useStore = create<AppState>()(
         const n = now();
         const newReply: QuickReply = { ...replyData, id, usageCount: 0, createdAt: n, updatedAt: n };
         set(s => ({ quickReplies: [...s.quickReplies, newReply] }));
-        await supabase.from('quick_replies').insert(quickReplyToDb(newReply));
+        const { error } = await supabase.from('quick_replies').insert(quickReplyToDb(newReply));
+        if (error) console.error('[addQuickReply] INSERT failed:', error.message);
       },
       updateQuickReply: async (id, updates) => {
         const n = now();
         set(s => ({
           quickReplies: s.quickReplies.map(r => r.id === id ? { ...r, ...updates, updatedAt: n } : r),
         }));
-        await supabase.from('quick_replies').update({ ...quickReplyToDb(updates), updated_at: n }).eq('id', id);
+        const { error } = await supabase.from('quick_replies').update({ ...quickReplyToDb(updates), updated_at: n }).eq('id', id);
+        if (error) console.error('[updateQuickReply] UPDATE failed:', error.message);
       },
       deleteQuickReply: async (id) => {
         set(s => ({ quickReplies: s.quickReplies.filter(r => r.id !== id) }));
-        await supabase.from('quick_replies').delete().eq('id', id);
+        const { error } = await supabase.from('quick_replies').delete().eq('id', id);
+        if (error) console.error('[deleteQuickReply] DELETE failed:', error.message);
       },
       incrementQuickReplyUsage: async (id) => {
         const reply = get().quickReplies.find(r => r.id === id);
@@ -771,7 +783,8 @@ const useStore = create<AppState>()(
             r.id === id ? { ...r, usageCount: newCount, updatedAt: n } : r
           ),
         }));
-        await supabase.from('quick_replies').update({ usage_count: newCount, updated_at: n }).eq('id', id);
+        const { error } = await supabase.from('quick_replies').update({ usage_count: newCount, updated_at: n }).eq('id', id);
+        if (error) console.error('[incrementQuickReplyUsage] UPDATE failed:', error.message);
       },
 
       // ── Goals ──
@@ -791,11 +804,13 @@ const useStore = create<AppState>()(
       updateGoal: async (id, updates) => {
         const n = now();
         set(s => ({ goals: s.goals.map(g => g.id === id ? { ...g, ...updates, updatedAt: n } : g) }));
-        await supabase.from('goals').update({ ...goalToDb(updates), updated_at: n }).eq('id', id);
+        const { error } = await supabase.from('goals').update({ ...goalToDb(updates), updated_at: n }).eq('id', id);
+        if (error) console.error('[updateGoal] UPDATE failed:', error.message);
       },
       deleteGoal: async (id) => {
         set(s => ({ goals: s.goals.filter(g => g.id !== id) }));
-        await supabase.from('goals').delete().eq('id', id);
+        const { error } = await supabase.from('goals').delete().eq('id', id);
+        if (error) console.error('[deleteGoal] DELETE failed:', error.message);
       },
 
       // ── UI preferences ──

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Pin, PinOff, Edit2, Trash2, FileText, AlertTriangle, HelpCircle, Lightbulb, CheckSquare, BookOpen, MessageSquare, Globe } from 'lucide-react';
+import { Plus, Search, Pin, PinOff, Edit2, Trash2, FileText, AlertTriangle, HelpCircle, Lightbulb, CheckSquare, BookOpen, MessageSquare } from 'lucide-react';
 import useStore from '../stores/useStore';
 import { formatDate } from '../utils/helpers';
 import Modal from '../components/ui/Modal';
@@ -74,7 +74,7 @@ export default function Knowledge() {
     const content: BilingualText = { lt: formLang === 'lt' ? formContent : '', en: formLang === 'en' ? formContent : '' };
     const tags = formTags.split(',').map(tg => tg.trim()).filter(Boolean);
     if (editEntry) {
-      updateKnowledgeEntry(editEntry, { title, content, category: formCategory, tags, isPinned: formPinned });
+      await updateKnowledgeEntry(editEntry, { title, content, category: formCategory, tags, isPinned: formPinned });
       setEditEntry(null);
       setShowAdd(false);
       resetForm();
@@ -178,11 +178,11 @@ export default function Knowledge() {
       {/* View Entry Modal */}
       <Modal isOpen={!!entry} onClose={() => setViewEntry(null)} title={entry ? getText(entry.title, lang) : ''} size="lg"
         footer={entry ? <>
-          <button className="btn-ghost" onClick={() => { updateKnowledgeEntry(entry.id, { isPinned: !entry.isPinned }); }}>
+          <button className="btn-ghost" onClick={async () => { await updateKnowledgeEntry(entry.id, { isPinned: !entry.isPinned }); }}>
             {entry.isPinned ? <><PinOff size={14} /> {t.common.unpin}</> : <><Pin size={14} /> {t.common.pin}</>}
           </button>
           <div className="flex-1" />
-          <button className="btn-danger btn-sm" onClick={() => { deleteKnowledgeEntry(entry.id); setViewEntry(null); toast.success(t.toast.entryDeleted); }}><Trash2 size={14} /> {t.common.delete}</button>
+          <button className="btn-danger btn-sm" onClick={async () => { await deleteKnowledgeEntry(entry.id); setViewEntry(null); toast.success(t.toast.entryDeleted); }}><Trash2 size={14} /> {t.common.delete}</button>
           <button className="btn-secondary" onClick={() => startEdit(entry)}><Edit2 size={14} /> {t.common.edit}</button>
         </> : undefined}
       >

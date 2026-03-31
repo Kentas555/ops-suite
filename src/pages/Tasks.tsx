@@ -130,13 +130,13 @@ export default function Tasks() {
     }
   }, []);
 
-  const handleColumnDrop = useCallback((e: React.DragEvent, columnKey: string) => {
+  const handleColumnDrop = useCallback(async (e: React.DragEvent, columnKey: string) => {
     e.preventDefault();
     const taskId = e.dataTransfer.getData('text/plain');
     if (taskId) {
       const droppedTask = tasks.find(tk => tk.id === taskId);
       if (droppedTask && droppedTask.status !== columnKey) {
-        updateTask(taskId, {
+        await updateTask(taskId, {
           status: columnKey as any,
           completedAt: columnKey === 'completed' ? new Date().toISOString() : droppedTask.completedAt,
         });
@@ -380,7 +380,7 @@ export default function Tasks() {
               {filtered.map(tk => (
                 <tr key={tk.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => setSelectedTask(tk.id)}>
                   <td className="px-4 py-3">
-                    <button onClick={(e) => { e.stopPropagation(); updateTask(tk.id, { status: tk.status === 'completed' ? 'todo' : 'completed', completedAt: tk.status === 'completed' ? undefined : new Date().toISOString() }); }}
+                    <button onClick={async (e) => { e.stopPropagation(); await updateTask(tk.id, { status: tk.status === 'completed' ? 'todo' : 'completed', completedAt: tk.status === 'completed' ? undefined : new Date().toISOString() }); }}
                       className="text-slate-400 hover:text-success-500">
                       {tk.status === 'completed' ? <CheckCircle2 size={18} className="text-success-500" /> : <Circle size={18} />}
                     </button>
@@ -408,10 +408,10 @@ export default function Tasks() {
       {/* Task Detail Modal */}
       <Modal isOpen={!!task} onClose={() => setSelectedTask(null)} title={task?.title || ''} size="lg"
         footer={task ? <>
-          <button className="btn-danger btn-sm" onClick={() => { deleteTask(task.id); setSelectedTask(null); toast.success(t.toast.taskDeleted); }}><Trash2 size={14} /> {t.common.delete}</button>
+          <button className="btn-danger btn-sm" onClick={async () => { await deleteTask(task.id); setSelectedTask(null); toast.success(t.toast.taskDeleted); }}><Trash2 size={14} /> {t.common.delete}</button>
           <div className="flex-1" />
           <button className="btn-secondary" onClick={() => setSelectedTask(null)}>{t.common.close}</button>
-          {task.status !== 'completed' && <button className="btn-primary" onClick={() => { updateTask(task.id, { status: 'completed', completedAt: new Date().toISOString() }); setSelectedTask(null); toast.success(t.toast.taskCompleted); }}>{t.tasks.markComplete}</button>}
+          {task.status !== 'completed' && <button className="btn-primary" onClick={async () => { await updateTask(task.id, { status: 'completed', completedAt: new Date().toISOString() }); setSelectedTask(null); toast.success(t.toast.taskCompleted); }}>{t.tasks.markComplete}</button>}
         </> : undefined}
       >
         {task && (
@@ -436,7 +436,7 @@ export default function Tasks() {
 
             <div>
               <label className="label">{t.common.status}</label>
-              <select name="status" className="select w-48" value={task.status} onChange={(e) => updateTask(task.id, { status: e.target.value as any })}>
+              <select name="status" className="select w-48" value={task.status} onChange={async (e) => await updateTask(task.id, { status: e.target.value as any })}>
                 <option value="todo">{t.tasks.toDo}</option><option value="in_progress">{t.tasks.inProgress}</option><option value="waiting">{t.tasks.waiting}</option>
                 <option value="blocked">{t.tasks.blocked}</option><option value="completed">{t.tasks.completed}</option>
               </select>

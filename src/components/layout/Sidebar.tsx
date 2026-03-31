@@ -229,7 +229,7 @@ function SidebarContent({ collapsed, onMobileClose }: { collapsed: boolean; onMo
         {currentUser && !collapsed && (
           <div className="px-4 py-3 border-b border-slate-100">
             <div className="text-xs font-medium text-slate-900 truncate">{currentUser.displayName}</div>
-            <div className="text-[10px] text-slate-400 truncate">{currentUser.email ?? currentUser.role === 'admin' ? t.auth.admin : t.auth.user}</div>
+            <div className="text-[10px] text-slate-400 truncate">{currentUser.email ?? (currentUser.role === 'admin' ? t.auth.admin : t.auth.user)}</div>
           </div>
         )}
 

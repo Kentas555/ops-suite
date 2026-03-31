@@ -133,7 +133,7 @@ export default function Contracts() {
                           </div>
                           <div className="mt-3 flex gap-2">
                             <select name="status" className="select text-xs w-36" value={contract.status}
-                              onChange={(e) => { updateContract(contract.id, { status: e.target.value as any }); toast.success(t.toast.contractUpdated); }}
+                              onChange={async (e) => { await updateContract(contract.id, { status: e.target.value as any }); toast.success(t.toast.contractUpdated); }}
                               onClick={(e) => e.stopPropagation()}>
                               <option value="draft">{t.contracts.draft}</option>
                               <option value="in_progress">{t.contracts.inProgress}</option>
