@@ -170,6 +170,8 @@ export interface CommunicationTemplate {
 export type GoalPeriod = 'month' | 'half_year' | 'year';
 export type GoalStatus = 'in_progress' | 'completed' | 'partially_completed' | 'not_completed';
 export type GoalType = 'revenue' | 'growth' | 'activity' | 'custom';
+export type TrackingMode = 'manual' | 'auto';
+export type AutoSource = 'calls' | 'emails' | 'meetings' | 'all_activity' | 'tasks_completed';
 
 export interface Goal extends VisibilityFields {
   id: string;
@@ -179,6 +181,8 @@ export interface Goal extends VisibilityFields {
   goalType: GoalType;
   targetValue: number;
   currentValue: number;
+  trackingMode: TrackingMode;
+  autoSource?: AutoSource;
   reflection: string;
   targetDate?: string;
   userId: string;

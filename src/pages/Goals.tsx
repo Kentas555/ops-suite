@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Edit2, Trash2, Target, CalendarDays, TrendingUp, Users, PhoneCall, Layers } from 'lucide-react';
+import { Plus, Edit2, Trash2, Target, CalendarDays, TrendingUp, Users, PhoneCall, Layers, Zap } from 'lucide-react';
 import useStore from '../stores/useStore';
 import useAuthStore from '../stores/useAuthStore';
 import useToastStore from '../stores/useToastStore';
@@ -7,18 +7,19 @@ import { useTranslation } from '../i18n/useTranslation';
 import { formatDate, isOverdue } from '../utils/helpers';
 import Modal from '../components/ui/Modal';
 import VisibilityPicker from '../components/ui/VisibilityPicker';
-import type { GoalPeriod, GoalStatus, GoalType, Visibility } from '../types';
+import { computeAutoValue, autoSourceLabel } from '../utils/goalTracking';
+import type { GoalPeriod, GoalStatus, GoalType, AutoSource, TrackingMode, Visibility } from '../types';
 
 const PERIOD_ORDER: GoalPeriod[] = ['month', 'half_year', 'year'];
 
-function formatValue(v: number): string {
+function fmtVal(v: number): string {
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `${(v / 1_000).toFixed(v >= 10_000 ? 0 : 1)}k`;
   return String(v);
 }
 
 export default function Goals() {
-  const { goals, addGoal, updateGoal, deleteGoal } = useStore();
+  const { goals, tasks, communicationLogs, addGoal, updateGoal, deleteGoal } = useStore();
   const currentUser = useAuthStore(s => s.getCurrentUser());
   const { t, lang } = useTranslation();
   const toast = useToastStore();
@@ -32,32 +33,27 @@ export default function Goals() {
   const emptyForm = {
     title: '', period: 'month' as GoalPeriod, status: 'in_progress' as GoalStatus,
     goalType: 'revenue' as GoalType, targetValue: '', currentValue: '',
+    trackingMode: 'manual' as TrackingMode, autoSource: 'calls' as AutoSource,
     reflection: '', targetDate: '',
     visibility: 'team' as Visibility, sharedWith: [] as string[],
   };
   const [form, setForm] = useState(emptyForm);
 
   const periodLabel = (p: GoalPeriod) => ({ month: t.goals.month, half_year: t.goals.halfYear, year: t.goals.year }[p]);
-
   const statusLabel = (s: GoalStatus) => ({
     in_progress: t.goals.inProgress, completed: t.goals.completed,
     partially_completed: t.goals.partiallyCompleted, not_completed: t.goals.notCompleted,
   }[s]);
-
   const statusColor = (s: GoalStatus) => ({
     in_progress: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
     completed: 'bg-green-50 text-green-700 ring-1 ring-green-200',
     partially_completed: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
     not_completed: 'bg-slate-100 text-slate-500 ring-1 ring-slate-200',
   }[s]);
-
   const typeLabel = (gt: GoalType) => ({
-    revenue: lang === 'lt' ? 'Pajamos' : 'Revenue',
-    growth: lang === 'lt' ? 'Augimas' : 'Growth',
-    activity: lang === 'lt' ? 'Aktyvumas' : 'Activity',
-    custom: lang === 'lt' ? 'Kita' : 'Custom',
+    revenue: lang === 'lt' ? 'Pajamos' : 'Revenue', growth: lang === 'lt' ? 'Augimas' : 'Growth',
+    activity: lang === 'lt' ? 'Aktyvumas' : 'Activity', custom: lang === 'lt' ? 'Kita' : 'Custom',
   }[gt]);
-
   const TypeIcon = ({ type }: { type: GoalType }) => {
     if (type === 'revenue') return <TrendingUp size={12} />;
     if (type === 'growth') return <Users size={12} />;
@@ -86,9 +82,10 @@ export default function Goals() {
         title: form.title, period: form.period, status: form.status,
         goalType: form.goalType,
         targetValue: Number(form.targetValue) || 0,
-        currentValue: Number(form.currentValue) || 0,
-        reflection: form.reflection,
-        targetDate: form.targetDate || undefined,
+        currentValue: form.trackingMode === 'auto' ? 0 : (Number(form.currentValue) || 0),
+        trackingMode: form.trackingMode,
+        autoSource: form.trackingMode === 'auto' ? form.autoSource : undefined,
+        reflection: form.reflection, targetDate: form.targetDate || undefined,
       };
       if (editId) {
         await updateGoal(editId, shared);
@@ -101,9 +98,7 @@ export default function Goals() {
         });
         toast.success(t.toast.entryCreated);
       }
-      setShowAdd(false);
-      setEditId(null);
-      setForm(emptyForm);
+      setShowAdd(false); setEditId(null); setForm(emptyForm);
     } catch (err: any) {
       toast.error(err.message || 'Failed to save');
     }
@@ -114,23 +109,20 @@ export default function Goals() {
       title: g.title, period: g.period, status: g.status,
       goalType: g.goalType, targetValue: String(g.targetValue || ''),
       currentValue: String(g.currentValue || ''),
+      trackingMode: g.trackingMode || 'manual', autoSource: g.autoSource || 'calls',
       reflection: g.reflection, targetDate: g.targetDate || '',
       visibility: 'team', sharedWith: [],
     });
-    setEditId(g.id);
-    setShowAdd(true);
+    setEditId(g.id); setShowAdd(true);
   };
 
   const handleProgressSave = async () => {
     if (!progressEdit) return;
-    const val = Number(progressEdit.value) || 0;
     try {
-      await updateGoal(progressEdit.id, { currentValue: val });
+      await updateGoal(progressEdit.id, { currentValue: Number(progressEdit.value) || 0 });
       toast.success(t.toast.changesSaved);
       setProgressEdit(null);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to update');
-    }
+    } catch (err: any) { toast.error(err.message || 'Failed to update'); }
   };
 
   const groupedByPeriod = useMemo(() => {
@@ -170,18 +162,14 @@ export default function Goals() {
         </div>
       )}
 
-      {/* Empty */}
       {goals.length === 0 && (
-        <div className="text-center py-16">
-          <Target size={32} className="text-slate-300 mx-auto mb-3" />
-          <p className="text-sm text-slate-500">{t.goals.noGoals}</p>
-        </div>
+        <div className="text-center py-16"><Target size={32} className="text-slate-300 mx-auto mb-3" /><p className="text-sm text-slate-500">{t.goals.noGoals}</p></div>
       )}
       {goals.length > 0 && filtered.length === 0 && (
         <div className="text-center py-12 text-sm text-slate-500">{t.goals.noGoalsMatch}</div>
       )}
 
-      {/* Goal cards grouped by period */}
+      {/* Goal cards */}
       {filtered.length > 0 && (
         <div className="space-y-8">
           {PERIOD_ORDER.filter(p => periodFilter === 'all' || periodFilter === p).map(period => {
@@ -195,20 +183,27 @@ export default function Goals() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {pg.map(goal => {
-                    const pct = goal.targetValue > 0 ? Math.min(Math.round((goal.currentValue / goal.targetValue) * 100), 100) : 0;
+                    const isAuto = goal.trackingMode === 'auto';
+                    const current = isAuto ? computeAutoValue(goal, communicationLogs, tasks) : goal.currentValue;
+                    const pct = goal.targetValue > 0 ? Math.min(Math.round((current / goal.targetValue) * 100), 100) : 0;
                     const overdue = goal.targetDate && isOverdue(goal.targetDate) && goal.status === 'in_progress';
                     const barColor = pct >= 100 ? 'bg-success-500' : pct >= 50 ? 'bg-primary-500' : 'bg-amber-500';
                     const isEditingProgress = progressEdit?.id === goal.id;
 
                     return (
                       <div key={goal.id} className="card p-4 group hover:shadow-md transition-shadow flex flex-col">
-                        {/* Header: title + actions */}
+                        {/* Header */}
                         <div className="flex items-start justify-between gap-2 mb-3">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-base font-semibold text-slate-900 leading-snug">{goal.title}</h3>
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                               <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${statusColor(goal.status)}`}>{statusLabel(goal.status)}</span>
                               <span className="text-[10px] text-slate-400 flex items-center gap-0.5"><TypeIcon type={goal.goalType} /> {typeLabel(goal.goalType)}</span>
+                              {isAuto && (
+                                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 ring-1 ring-purple-200 flex items-center gap-0.5">
+                                  <Zap size={9} /> Auto
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div className="flex gap-1 flex-shrink-0 opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
@@ -217,14 +212,12 @@ export default function Goals() {
                           </div>
                         </div>
 
-                        {/* Progress bar */}
+                        {/* Progress */}
                         {goal.targetValue > 0 && (
                           <div className="mb-3">
                             <div className="flex items-baseline justify-between mb-1">
                               <span className="text-2xl font-bold text-slate-900">{pct}%</span>
-                              <span className="text-xs text-slate-500">
-                                {formatValue(goal.currentValue)} / {formatValue(goal.targetValue)}
-                              </span>
+                              <span className="text-xs text-slate-500">{fmtVal(current)} / {fmtVal(goal.targetValue)}</span>
                             </div>
                             <div className="w-full bg-slate-100 rounded-full h-2.5">
                               <div className={`h-2.5 rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${pct}%` }} />
@@ -232,28 +225,28 @@ export default function Goals() {
                           </div>
                         )}
 
-                        {/* Quick progress update */}
-                        {goal.targetValue > 0 && goal.status === 'in_progress' && (
+                        {/* Auto tracking label */}
+                        {isAuto && goal.autoSource && (
+                          <div className="text-[11px] text-purple-600 mb-2 flex items-center gap-1">
+                            <Zap size={10} />
+                            {lang === 'lt' ? 'Seka' : 'Tracking'}: {autoSourceLabel(goal.autoSource, lang)}
+                          </div>
+                        )}
+
+                        {/* Manual progress update */}
+                        {!isAuto && goal.targetValue > 0 && goal.status === 'in_progress' && (
                           <div className="mb-3">
                             {isEditingProgress ? (
                               <div className="flex items-center gap-2">
-                                <input
-                                  type="number"
-                                  name="progressValue"
-                                  className="input flex-1 text-sm"
-                                  value={progressEdit.value}
-                                  onChange={(e) => setProgressEdit({ ...progressEdit, value: e.target.value })}
-                                  autoFocus
-                                  onKeyDown={(e) => { if (e.key === 'Enter') handleProgressSave(); if (e.key === 'Escape') setProgressEdit(null); }}
-                                />
+                                <input type="number" name="progressValue" className="input flex-1 text-sm" value={progressEdit.value}
+                                  onChange={(e) => setProgressEdit({ ...progressEdit, value: e.target.value })} autoFocus
+                                  onKeyDown={(e) => { if (e.key === 'Enter') handleProgressSave(); if (e.key === 'Escape') setProgressEdit(null); }} />
                                 <button className="btn-primary btn-sm" onClick={handleProgressSave}>{t.common.save}</button>
                                 <button className="btn-ghost btn-sm" onClick={() => setProgressEdit(null)}>{t.common.cancel}</button>
                               </div>
                             ) : (
-                              <button
-                                onClick={() => setProgressEdit({ id: goal.id, value: String(goal.currentValue) })}
-                                className="text-xs text-primary-600 hover:text-primary-700 font-medium hover:underline"
-                              >
+                              <button onClick={() => setProgressEdit({ id: goal.id, value: String(goal.currentValue) })}
+                                className="text-xs text-primary-600 hover:text-primary-700 font-medium hover:underline">
                                 {lang === 'lt' ? 'Atnaujinti progresą' : 'Update progress'} →
                               </button>
                             )}
@@ -284,15 +277,8 @@ export default function Goals() {
       )}
 
       {/* Create / Edit Modal */}
-      <Modal
-        isOpen={showAdd}
-        onClose={() => { setShowAdd(false); setEditId(null); }}
-        title={editId ? t.goals.editGoal : t.goals.newGoal}
-        size="lg"
-        footer={<>
-          <button className="btn-secondary" onClick={() => { setShowAdd(false); setEditId(null); }}>{t.common.cancel}</button>
-          <button className="btn-primary" onClick={handleSave} disabled={!form.title.trim()}>{t.common.save}</button>
-        </>}
+      <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); setEditId(null); }} title={editId ? t.goals.editGoal : t.goals.newGoal} size="lg"
+        footer={<><button className="btn-secondary" onClick={() => { setShowAdd(false); setEditId(null); }}>{t.common.cancel}</button><button className="btn-primary" onClick={handleSave} disabled={!form.title.trim()}>{t.common.save}</button></>}
       >
         <div className="space-y-4">
           <div>
@@ -320,15 +306,49 @@ export default function Goals() {
             </div>
           </div>
 
+          {/* Tracking mode toggle */}
+          <div>
+            <label className="label">{lang === 'lt' ? 'Sekimo būdas' : 'Tracking mode'}</label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setForm({ ...form, trackingMode: 'manual' })}
+                className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-all ${form.trackingMode === 'manual' ? 'border-primary-300 bg-primary-50 text-primary-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                {lang === 'lt' ? 'Rankinis' : 'Manual'}
+              </button>
+              <button type="button" onClick={() => setForm({ ...form, trackingMode: 'auto' })}
+                className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-all flex items-center justify-center gap-1 ${form.trackingMode === 'auto' ? 'border-purple-300 bg-purple-50 text-purple-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                <Zap size={12} /> {lang === 'lt' ? 'Automatinis' : 'Auto tracking'}
+              </button>
+            </div>
+          </div>
+
+          {/* Auto source selector */}
+          {form.trackingMode === 'auto' && (
+            <div>
+              <label className="label">{lang === 'lt' ? 'Ką sekti?' : 'What to track?'}</label>
+              <select name="autoSource" className="select" value={form.autoSource} onChange={(e) => setForm({ ...form, autoSource: e.target.value as AutoSource })}>
+                <option value="calls">{lang === 'lt' ? 'Skambučiai' : 'Calls'}</option>
+                <option value="emails">{lang === 'lt' ? 'El. laiškai' : 'Emails'}</option>
+                <option value="meetings">{lang === 'lt' ? 'Susitikimai' : 'Meetings'}</option>
+                <option value="all_activity">{lang === 'lt' ? 'Visa veikla' : 'All activity'}</option>
+                <option value="tasks_completed">{lang === 'lt' ? 'Užbaigtos užduotys' : 'Completed tasks'}</option>
+              </select>
+              <p className="text-xs text-slate-400 mt-1">
+                {lang === 'lt' ? 'Progresas bus skaičiuojamas automatiškai pagal sistemos duomenis.' : 'Progress will be calculated automatically from system data.'}
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="label">{lang === 'lt' ? 'Tikslas (skaičius)' : 'Target value'}</label>
-              <input name="targetValue" type="number" className="input" placeholder="e.g. 200000" value={form.targetValue} onChange={(e) => setForm({ ...form, targetValue: e.target.value })} />
+              <input name="targetValue" type="number" className="input" placeholder="e.g. 100" value={form.targetValue} onChange={(e) => setForm({ ...form, targetValue: e.target.value })} />
             </div>
-            <div>
-              <label className="label">{lang === 'lt' ? 'Dabartinė reikšmė' : 'Current value'}</label>
-              <input name="currentValue" type="number" className="input" placeholder="e.g. 45000" value={form.currentValue} onChange={(e) => setForm({ ...form, currentValue: e.target.value })} />
-            </div>
+            {form.trackingMode === 'manual' && (
+              <div>
+                <label className="label">{lang === 'lt' ? 'Dabartinė reikšmė' : 'Current value'}</label>
+                <input name="currentValue" type="number" className="input" placeholder="e.g. 45" value={form.currentValue} onChange={(e) => setForm({ ...form, currentValue: e.target.value })} />
+              </div>
+            )}
             <div>
               <label className="label">{lang === 'lt' ? 'Terminas' : 'Deadline'}</label>
               <input name="targetDate" type="date" className="input" value={form.targetDate} onChange={(e) => setForm({ ...form, targetDate: e.target.value })} />

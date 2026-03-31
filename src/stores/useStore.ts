@@ -295,6 +295,8 @@ function mapGoal(r: Record<string, unknown>): Goal {
     goalType: (r.goal_type as Goal['goalType']) || 'custom',
     targetValue: (r.target_value as number) || 0,
     currentValue: (r.current_value as number) || 0,
+    trackingMode: (r.tracking_mode as Goal['trackingMode']) || 'manual',
+    autoSource: r.auto_source as Goal['autoSource'] | undefined,
     reflection: (r.reflection as string) || '',
     targetDate: r.target_date as string | undefined,
     userId: r.user_id as string,
@@ -313,6 +315,8 @@ function goalToDb(g: Partial<Goal>): Record<string, unknown> {
   if (g.goalType !== undefined) d.goal_type = g.goalType;
   if (g.targetValue !== undefined) d.target_value = g.targetValue;
   if (g.currentValue !== undefined) d.current_value = g.currentValue;
+  if (g.trackingMode !== undefined) d.tracking_mode = g.trackingMode;
+  if (g.autoSource !== undefined) d.auto_source = g.autoSource;
   if (g.reflection !== undefined) d.reflection = g.reflection;
   if (g.targetDate !== undefined) d.target_date = g.targetDate;
   if (g.userId !== undefined) d.user_id = g.userId;
