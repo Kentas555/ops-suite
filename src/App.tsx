@@ -24,9 +24,10 @@ import useReminderStore from './stores/useReminderStore';
 
 // Initializes Supabase auth listener + loads all data on login
 function AppLoader({ children }: { children: React.ReactNode }) {
-  const initialized = useAuthStore(s => s.initialized);
+  const authInitialized = useAuthStore(s => s.initialized);
   const session = useAuthStore(s => s.session);
   const initialize = useAuthStore(s => s.initialize);
+  const dataInitialized = useStore(s => s.initialized);
   const fetchAll = useStore(s => s.fetchAll);
   const fetchReminders = useReminderStore(s => s.fetchReminders);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -45,10 +46,20 @@ function AppLoader({ children }: { children: React.ReactNode }) {
     }
   }, [session, fetchAll, fetchReminders]);
 
-  if (!initialized) {
+  // Wait for auth to initialize
+  if (!authInitialized) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-400 text-sm">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-0, #f8fafc)' }}>
+        <div className="text-sm" style={{ color: 'var(--text-tertiary, #94a3b8)' }}>Loading...</div>
+      </div>
+    );
+  }
+
+  // If logged in, also wait for data before rendering any page
+  if (session && !dataInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-0, #f8fafc)' }}>
+        <div className="text-sm" style={{ color: 'var(--text-tertiary, #94a3b8)' }}>Loading...</div>
       </div>
     );
   }
