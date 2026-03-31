@@ -169,12 +169,16 @@ export interface CommunicationTemplate {
 
 export type GoalPeriod = 'month' | 'half_year' | 'year';
 export type GoalStatus = 'in_progress' | 'completed' | 'partially_completed' | 'not_completed';
+export type GoalType = 'revenue' | 'growth' | 'activity' | 'custom';
 
 export interface Goal extends VisibilityFields {
   id: string;
   title: string;
   period: GoalPeriod;
   status: GoalStatus;
+  goalType: GoalType;
+  targetValue: number;
+  currentValue: number;
   reflection: string;
   targetDate?: string;
   userId: string;
