@@ -8,11 +8,12 @@ import Modal from '../components/ui/Modal';
 import { useTranslation } from '../i18n/useTranslation';
 import useToastStore from '../stores/useToastStore';
 import VisibilityPicker from '../components/ui/VisibilityPicker';
+import { computeClientHealth, HEALTH_CONFIG } from '../utils/clientHealth';
 import type { Visibility } from '../types';
 
 export default function Clients() {
-  const { clients, addClient } = useStore();
-  const { t } = useTranslation();
+  const { clients, tasks, addClient } = useStore();
+  const { t, lang } = useTranslation();
   const toast = useToastStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
@@ -116,13 +117,14 @@ export default function Clients() {
           <tbody className="divide-y divide-slate-50">
             {filtered.map((client) => {
               const lastDays = daysAgoCount(client.lastInteractionAt);
-              const isAtRisk = client.status === 'issue' || client.status === 'at_risk';
+              const health = computeClientHealth(client, tasks);
+              const hCfg = HEALTH_CONFIG[health.status];
 
               return (
                 <tr key={client.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-4 py-3">
                     <Link to={`/clients/${client.id}`} className="flex items-center gap-2 text-slate-900 font-medium hover:text-primary-700 transition-colors">
-                      {isAtRisk && <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />}
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${hCfg.dot}`} title={lang === 'lt' ? hCfg.labelLt : hCfg.label} />
                       {client.companyName}
                     </Link>
                   </td>

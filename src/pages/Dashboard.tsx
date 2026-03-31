@@ -1,10 +1,11 @@
+import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Clock, ChevronRight, CalendarDays, Users, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, ChevronRight, CalendarDays, Users, CheckCircle2, PhoneCall, ClipboardList, TrendingUp } from 'lucide-react';
 import useStore from '../stores/useStore';
-import { formatDate, isOverdue, isDueToday, isDueTomorrow, isDueThisWeek, isDueNextWeek, daysAgoCount } from '../utils/helpers';
+import { formatDate, isOverdue, isDueToday, isDueTomorrow, isDueThisWeek, isDueNextWeek } from '../utils/helpers';
 import PriorityBadge from '../components/ui/PriorityBadge';
-import StatusBadge from '../components/ui/StatusBadge';
 import { useTranslation } from '../i18n/useTranslation';
+import { computeClientHealth, HEALTH_CONFIG } from '../utils/clientHealth';
 import type { Task } from '../types';
 
 const priorityOrder: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
@@ -33,31 +34,35 @@ export default function Dashboard() {
   // Focus items = overdue + high/urgent due today (the absolute must-dos)
   const focusItems = [...overdueTasks, ...todayTasks.filter(tk => tk.priority === 'urgent' || tk.priority === 'high')];
 
-  // Clients needing action: have a nextAction or are at_risk/issue
-  const clientsWithActions = clients
-    .filter(c => c.nextAction && c.status !== 'churned')
-    .sort((a, b) => (a.lastInteractionAt || a.updatedAt).localeCompare(b.lastInteractionAt || b.updatedAt));
+  // Client health: computed from interaction dates + tasks
+  const clientHealthMap = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof computeClientHealth>>();
+    for (const c of clients) {
+      if (c.status !== 'churned' && c.status !== 'prospect') {
+        map.set(c.id, computeClientHealth(c, tasks));
+      }
+    }
+    return map;
+  }, [clients, tasks]);
 
-  const riskClients = clients.filter(c => c.status === 'at_risk' || c.status === 'issue');
-
-  const inactiveClients = clients
-    .filter(c => {
-      if (c.status === 'churned' || c.status === 'prospect') return false;
-      const days = daysAgoCount(c.lastInteractionAt);
-      return days === null || days > 7;
-    })
-    .sort((a, b) => (a.lastInteractionAt || a.createdAt).localeCompare(b.lastInteractionAt || b.createdAt));
-
-  // Merge attention clients (risk + inactive), deduplicated
-  const attentionClientIds = new Set<string>();
-  const attentionClients = [...riskClients, ...clientsWithActions, ...inactiveClients].filter(c => {
-    if (attentionClientIds.has(c.id)) return false;
-    attentionClientIds.add(c.id);
-    return true;
-  });
+  // Clients to focus: at_risk first, then needs_attention, sorted by severity
+  const healthOrder = { at_risk: 0, needs_attention: 1, active: 2 };
+  const clientsToFocus = useMemo(() =>
+    clients
+      .filter(c => {
+        const h = clientHealthMap.get(c.id);
+        return h && (h.status === 'at_risk' || h.status === 'needs_attention' || h.triggers.length > 0);
+      })
+      .sort((a, b) => {
+        const ha = clientHealthMap.get(a.id)!;
+        const hb = clientHealthMap.get(b.id)!;
+        return (healthOrder[ha.status] ?? 9) - (healthOrder[hb.status] ?? 9);
+      })
+      .slice(0, 6),
+  [clients, clientHealthMap]);
 
   const hasFocus = focusItems.length > 0;
-  const allClear = overdueTasks.length === 0 && todayTasks.length === 0 && attentionClients.length === 0;
+  const allClear = overdueTasks.length === 0 && todayTasks.length === 0 && clientsToFocus.length === 0;
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
@@ -224,49 +229,53 @@ export default function Dashboard() {
 
 
       {/* ══════════════════════════════════════════════════════════
-          LEVEL 3 — CLIENT INTELLIGENCE
+          LEVEL 3 — CLIENTS TO FOCUS
          ══════════════════════════════════════════════════════════ */}
 
-      {attentionClients.length > 0 && (
+      {clientsToFocus.length > 0 ? (
         <section className="dash-section dash-section-attention">
           <div className="dash-section-header">
-            <h2><Users size={11} className="inline mr-1" />{t.crm.clientsNeedingAction} ({attentionClients.length})</h2>
+            <h2><Users size={11} className="inline mr-1" />{lang === 'lt' ? 'Klientai, kuriems skirti dėmesį' : 'Clients to Focus'} ({clientsToFocus.length})</h2>
             <Link to="/clients" className="text-[11px] hover:underline" style={{ color: 'var(--text-tertiary)' }}>{t.common.viewAll} <ChevronRight size={10} className="inline" /></Link>
           </div>
           <div>
-            {attentionClients.slice(0, 6).map((client) => {
-              const days = daysAgoCount(client.lastInteractionAt);
-              const isRisk = client.status === 'at_risk' || client.status === 'issue';
+            {clientsToFocus.map((client) => {
+              const health = clientHealthMap.get(client.id)!;
+              const cfg = HEALTH_CONFIG[health.status];
+              const trigger = health.triggers[0];
+              const TriggerIcon = trigger?.type === 'follow_up' ? PhoneCall : trigger?.type === 'overdue_task' ? ClipboardList : TrendingUp;
+
               return (
                 <Link key={client.id} to={`/clients/${client.id}`} className="dash-row block">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    {isRisk && <span className="w-1.5 h-1.5 rounded-full bg-danger-500 flex-shrink-0" />}
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{client.companyName}</div>
-                      {client.nextAction && <div className="text-[11px] mt-0.5 truncate" style={{ color: 'var(--text-tertiary)' }}>{client.nextAction}</div>}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{client.companyName}</span>
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}>
+                          {lang === 'lt' ? cfg.labelLt : cfg.label}
+                        </span>
+                      </div>
+                      {trigger && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <TriggerIcon size={10} className="text-slate-400 flex-shrink-0" />
+                          <span className="text-[11px] truncate" style={{ color: 'var(--text-tertiary)' }}>
+                            {lang === 'lt' ? trigger.labelLt : trigger.label}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {isRisk && <StatusBadge status={client.status} />}
-                    {days !== null && (
-                      <span className={`text-[10px] ${days > 7 ? 'text-warning-600 font-medium' : ''}`} style={days <= 7 ? { color: 'var(--text-tertiary)' } : undefined}>
-                        {days === 0 ? t.crm.today : `${days}d`}
-                      </span>
-                    )}
-                    <ChevronRight size={13} style={{ color: 'var(--text-muted)' }} />
-                  </div>
+                  <ChevronRight size={13} style={{ color: 'var(--text-muted)' }} />
                 </Link>
               );
             })}
           </div>
         </section>
-      )}
-
-      {/* If there are no clients needing action and no attention clients */}
-      {attentionClients.length === 0 && clientsWithActions.length === 0 && (
+      ) : (
         <section className="dash-section dash-section-neutral">
           <div className="dash-section-header">
-            <h2><Users size={11} className="inline mr-1" />{t.crm.clientsNeedingAction}</h2>
+            <h2><Users size={11} className="inline mr-1" />{lang === 'lt' ? 'Klientai, kuriems skirti dėmesį' : 'Clients to Focus'}</h2>
           </div>
           <div className="dash-empty">{t.crm.noClientsNeedAction}</div>
         </section>
